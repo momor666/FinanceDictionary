@@ -12,9 +12,7 @@ import android.view.ViewGroup;
 
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.activity.CategoryActivity;
-import com.nakhmedov.finance.ui.adapter.CategoryAdapter;
 import com.nakhmedov.finance.ui.adapter.StarredAdapter;
-import com.nakhmedov.finance.ui.entity.Category;
 import com.nakhmedov.finance.ui.entity.Term;
 
 import java.util.ArrayList;

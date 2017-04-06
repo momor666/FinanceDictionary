@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.entity.Category;
-import com.nakhmedov.finance.ui.fragment.CategoryListFragment;
 import com.nakhmedov.finance.ui.listener.OnItemClickListener;
 
 import java.util.List;

@@ -70,7 +70,6 @@ public class CategoryFragment extends Fragment {
         ((CategoryActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((CategoryActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.categories));
 
-
     }
 
     private class Adapter extends FragmentStatePagerAdapter {

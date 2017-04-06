@@ -2,9 +2,6 @@
     <string name="app_name">Go Finance</string>
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-2087818790993613/6234749686</string>
     <string name="insertial_ad_unit_id" translatable="false">ca-app-pub-2087818790993613/9048615288</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
     <string name="categories">Categories</string>
     <string name="quiz">Quiz</string>
     <string name="stockWatch">Stock Watch</string>
@@ -14,4 +11,17 @@
     <string name="starred">Starred</string>
     <string name="calculator">Calculator</string>
     <string name="all">All</string>
+    <string name="main">Main</string>
+
+    <!--Settings-->
+    <string name="notifications">Notifications</string>
+    <string name="notify_daily_term">Notify me daily definitions</string>
+    <string name="notify_new_version">Notify me about newer versions</string>
+    <string name="choose_speech_language">Choose speech language</string>
+    <string name="english_us">English US</string>
+    <string name="english_uk">English UK</string>
+    <string name="social">Social</string>
+    <string name="share">Share</string>
+    <string name="rate">Please rate us</string>
+    <string name="sharing_txt">Hey! Check out my app https://play.google.com/store/apps/details?id=com.nakhmedov.finance</string>
 </resources>

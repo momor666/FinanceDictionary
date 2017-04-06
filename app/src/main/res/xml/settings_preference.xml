@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/main">
+
+        <ListPreference
+            android:key="choose_speech_language"
+            android:title="@string/choose_speech_language"
+            android:entries="@array/language_types"
+            android:entryValues="@array/language_types"
+            android:summary="@string/english_us"
+            android:defaultValue="@string/english_us"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/notifications">
+
+        <CheckBoxPreference
+            android:key="pref_ntfy_daily_term"
+            android:title="@string/notify_daily_term"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="pref_ntfy_new_version"
+            android:title="@string/notify_new_version"
+            android:defaultValue="true"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/social">
+
+        <Preference
+            android:key="share"
+            android:title="@string/share"/>
+
+        <Preference
+            android:key="rate"
+            android:title="@string/rate"/>
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

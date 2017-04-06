@@ -9,7 +9,7 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/action_settings"
         android:title="@string/settings" />
 
 </menu>
