@@ -38,6 +38,7 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
         prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         languageOptionPreference = (ListPreference) findPreference("choose_speech_language");
+        languageOptionPreference.setSummary(prefs.getString("choose_speech_language", getString(R.string.english_us)));
         Preference sharePreference = findPreference("share");
         Preference ratePreference = findPreference("rate");
 

@@ -1,12 +1,15 @@
 package com.nakhmedov.finance.ui.activity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,11 +19,20 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
+import com.nakhmedov.finance.BuildConfig;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.adapter.MainMenuAdapter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,10 +47,19 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String TAG = MainActivity.class.getCanonicalName();
+
     @BindView(R.id.gridview) GridView gridView;
     @BindView(R.id.adView) AdView mAdView;
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.search_view) MaterialSearchView searchView;
+
+    // Remote Config keys
+    private static final String BANNER_ADS_KEY = "banner_ads_enabled";
+    private static final String INSERTIAL_ADS_KEY = "insertial_ads_enabled";
+    private static final String APP_LAST_VERSION_KEY = "app_last_version_code";
+
+    private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +75,21 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         mAdView.loadAd(adRequest);
 
+
+        /*Firebase*/
+
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings mRemoteConfigSettings = new FirebaseRemoteConfigSettings
+                .Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+
+        mFirebaseRemoteConfig.setConfigSettings(mRemoteConfigSettings);
+//        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
+
+        /*Fetch remote config*/
+
+        fetchRemoteConfig();
 
         MainMenuAdapter menuAdapter = new MainMenuAdapter(MainActivity.this);
         gridView.setAdapter(menuAdapter);
@@ -188,5 +224,41 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void fetchRemoteConfig() {
+        long cacheExpiration = 3600; // 1 hour in seconds
+        // If developer mode is enabled reduce cacheExpiration to 0 so that
+        // each fetch goes to the server. This should not be used in release
+        // builds.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings()
+                .isDeveloperModeEnabled()) {
+            cacheExpiration = 0;
+        }
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.w(TAG, "Success onComplete fetching config");
+                            mFirebaseRemoteConfig.activateFetched();
+                            applyConfigs();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error fetching config: " +
+                                e.getMessage());
+                        applyConfigs();
+                    }
+                });
+    }
+
+    private void applyConfigs() {
+        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(BANNER_ADS_KEY) +"");
+        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(INSERTIAL_ADS_KEY) + "");
+        Log.i(TAG, mFirebaseRemoteConfig.getLong(APP_LAST_VERSION_KEY) +"");
     }
 }
