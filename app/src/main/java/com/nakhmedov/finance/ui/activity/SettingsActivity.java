@@ -19,20 +19,18 @@ import butterknife.ButterKnife;
  * To change this template use File | Settings | File Templates
  */
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
 
-    @BindView(R.id.toolbar) Toolbar mToolbar;
+    @Override
+    public int getLayoutResourceId() {
+        return R.layout.settings;
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.settings);
 
-        ButterKnife.bind(this);
-
-        setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle(R.string.settings);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        showBackBtn();
 
         if (savedInstanceState == null) {
             SettingsFragment settingsFragment = new SettingsFragment();

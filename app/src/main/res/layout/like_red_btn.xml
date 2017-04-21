@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.like.LikeButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/like_red_btn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:icon_type="Star"
+    app:circle_start_color="@color/colorPrimary"
+    app:like_drawable="@drawable/ic_heart_like_red"
+    app:unlike_drawable="@drawable/ic_heart_unlike_white"
+    app:dots_primary_color="@color/red"
+    app:dots_secondary_color="@color/red"
+    android:layout_centerInParent="true"
+    app:circle_end_color="@color/red"
+    app:icon_size="25dp"
+    app:liked="false"
+    app:anim_scale_factor="2"
+    app:is_enabled="true" />

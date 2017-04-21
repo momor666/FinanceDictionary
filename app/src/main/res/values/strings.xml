@@ -24,4 +24,24 @@
     <string name="share">Share</string>
     <string name="rate">Please rate us</string>
     <string name="sharing_txt">Hey! Check out my app https://play.google.com/store/apps/details?id=com.nakhmedov.finance</string>
+    <string name="invitation_title">Go Finance Invite</string>
+    <string name="invitation_message">Please join me for a Go Finance</string>
+    <string name="invitation_cta">Call to action</string>
+    <string name="invite">Invite</string>
+
+    <!--App Update-->
+    <string name="new_version_available">New version is available!\nPlease update.</string>
+    <string name="dont_check">Don\'t check for updates</string>
+    <string name="update">Update</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="empty">Empty</string>
+    <string name="like">Like</string>
+    <string name="category_sharing_txt">%1$s is my favourite category</string>
+    <string name="definition">Definition</string>
+    <string name="play">Play</string>
+    <string name="smth_wrong">Ohh, something is wrong</string>
+    <string name="add_favourite">Added to favourites</string>
+    <string name="app_url">Go Finance https://play.google.com/store/apps/details?id=com.nakhmedov.finance</string>
+    <string name="no_content_play">No content to play, please try to check internet connection</string>
+
 </resources>

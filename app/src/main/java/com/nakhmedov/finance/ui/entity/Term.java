@@ -1,9 +1,17 @@
 package com.nakhmedov.finance.ui.entity;
 
+import android.support.annotation.Nullable;
+
+import com.google.gson.annotations.SerializedName;
+import com.nakhmedov.finance.constants.ContextConstants;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.NotNull;
+import org.greenrobot.greendao.annotation.Transient;
+
+import me.yokeyword.indexablerv.IndexableEntity;
 
 /**
  * Created with Android Studio
@@ -14,28 +22,42 @@ import org.greenrobot.greendao.annotation.NotNull;
  */
 
 @Entity
-public class Term {
+public class Term extends RecentSearches implements IndexableEntity {
 
     @Id
     private Long id;
 
     @NotNull
     private String name;
-    @NotNull
-    private String definition;
-    @Generated(hash = 1648481445)
-    public Term(Long id, @NotNull String name, @NotNull String definition) {
-        this.id = id;
+
+    private boolean starred;
+
+    @Nullable
+    @SerializedName("desciption")
+    private String description;
+
+    @SerializedName("category_id")
+    private Long categoryId;
+
+    private transient int itemType = ContextConstants.TERM_TYPE;
+
+    public Term(String name, String description) {
         this.name = name;
-        this.definition = definition;
+        this.description = description;
     }
+
     @Generated(hash = 142182234)
     public Term() {
     }
 
-    public Term(String name, String definition) {
+    @Generated(hash = 2115559111)
+    public Term(Long id, @NotNull String name, boolean starred, String description,
+            Long categoryId) {
+        this.id = id;
         this.name = name;
-        this.definition = definition;
+        this.starred = starred;
+        this.description = description;
+        this.categoryId = categoryId;
     }
 
     public Long getId() {
@@ -50,10 +72,47 @@ public class Term {
     public void setName(String name) {
         this.name = name;
     }
-    public String getDefinition() {
-        return this.definition;
+
+    @Override
+    public String getFieldIndexBy() {
+        return name;
     }
-    public void setDefinition(String definition) {
-        this.definition = definition;
+
+    @Override
+    public void setFieldIndexBy(String indexByField) {
+        this.name = indexByField;
     }
+
+    @Override
+    public void setFieldPinyinIndexBy(String pinyin) {
+        this.name = pinyin;
+    }
+    public boolean getStarred() {
+        return this.starred;
+    }
+    public void setStarred(boolean starred) {
+        this.starred = starred;
+    }
+
+    @Nullable
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(@Nullable String description) {
+        this.description = description;
+    }
+
+    public Long getCategoryId() {
+        return this.categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public int getItemType() {
+        return this.itemType;
+    }
+
 }

@@ -11,6 +11,7 @@ import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.entity.Category;
 import com.nakhmedov.finance.ui.listener.OnItemClickListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -27,13 +28,12 @@ import butterknife.ButterKnife;
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> implements
         OnItemClickListener {
 
-    private final List<Category> categoryList;
+    private List<Category> categoryList = new ArrayList<>();
     private Context mContext;
     private OnItemClickListener mListener;
 
-    public CategoryAdapter(Context context, List<Category> categoryList, OnItemClickListener listener) {
+    public CategoryAdapter(Context context, OnItemClickListener listener) {
         this.mContext = context;
-        this.categoryList = categoryList;
         this.mListener = listener;
     }
 
@@ -65,6 +65,11 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     @Override
     public void onItemClick(int position) {
         mListener.onItemClick(position);
+    }
+
+    public void setData(List<Category> categoryList) {
+        this.categoryList = categoryList;
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

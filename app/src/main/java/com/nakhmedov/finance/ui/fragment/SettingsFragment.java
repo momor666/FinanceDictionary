@@ -9,9 +9,18 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import com.google.android.gms.appinvite.AppInviteInvitation;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.constants.PrefLab;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * Created with Android Studio
@@ -23,6 +32,9 @@ import com.nakhmedov.finance.R;
 
 public class SettingsFragment extends PreferenceFragment implements Preference.OnPreferenceClickListener {
 
+    private static final String TAG = SettingsFragment.class.getCanonicalName();
+
+    private static final int REQUEST_INVITE = 101;
     private SharedPreferences prefs;
 
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
@@ -37,31 +49,30 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
 
         prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-        languageOptionPreference = (ListPreference) findPreference("choose_speech_language");
-        languageOptionPreference.setSummary(prefs.getString("choose_speech_language", getString(R.string.english_us)));
-        Preference sharePreference = findPreference("share");
-        Preference ratePreference = findPreference("rate");
+        languageOptionPreference = (ListPreference) findPreference(PrefLab.CHOOSE_SPEECH_LANGUAGE);
+        languageOptionPreference.setSummary(prefs.getString(PrefLab.CHOOSE_SPEECH_LANGUAGE, getString(R.string.english_us)));
+        Preference sharePreference = findPreference(PrefLab.SHARE);
+        Preference ratePreference = findPreference(PrefLab.RATE);
+        Preference invitePreference = findPreference(PrefLab.INVITE);
 
         sharePreference.setOnPreferenceClickListener(this);
         ratePreference.setOnPreferenceClickListener(this);
-
-
-
+        invitePreference.setOnPreferenceClickListener(this);
 
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 switch (key) {
-                    case "choose_speech_language": {
+                    case PrefLab.CHOOSE_SPEECH_LANGUAGE: {
                         String value = sharedPreferences.getString(key, getString(R.string.english_us));
                         languageOptionPreference.setSummary(value);
                         break;
                     }
-                    case "pref_ntfy_daily_term": {
+                    case PrefLab.NTFY_DAILY_TERM: {
 
                         break;
                     }
-                    case "pref_ntfy_new_version": {
+                    case PrefLab.NTFY_NEW_VERSION: {
 
                         break;
                     }
@@ -74,7 +85,7 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
     public boolean onPreferenceClick(Preference preference) {
         String itemKey = preference.getKey();
         switch (itemKey) {
-            case "share": {
+            case PrefLab.SHARE: {
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
                 shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.sharing_txt));
@@ -82,7 +93,7 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share)));
                 break;
             }
-            case "rate": {
+            case PrefLab.RATE: {
                 Uri uri = Uri.parse("market://details?id=" + getActivity().getPackageName());
                 Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
                 // To count with Play market backstack, After pressing back button,
@@ -98,9 +109,38 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
                 }
                 break;
             }
+            case PrefLab.INVITE: {
+                sendInvitation();
+                break;
+            }
         }
 
         return true;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_INVITE) {
+            if (resultCode == RESULT_OK) {
+                // Use Firebase Measurement to log that invitation was sent.
+                Bundle payload = new Bundle();
+                payload.putString(FirebaseAnalytics.Param.VALUE, "inv_sent");
+
+                // Check how many invitations were sent and log.
+                String[] ids = AppInviteInvitation.getInvitationIds(resultCode, data);
+                Log.d(TAG, "Invitations sent: " + ids.length);
+            } else {
+                // Use Firebase Measurement to log that invitation was not sent
+                Bundle payload = new Bundle();
+                payload.putString(FirebaseAnalytics.Param.VALUE, "inv_not_sent");
+                FirebaseAnalytics mFirebaseAnalytics = FirebaseAnalytics.getInstance(getActivity());
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, payload);
+
+                // Sending failed or it was canceled, show failure message to the user
+                Log.d(TAG, "Failed to send invitation.");
+            }
+        }
     }
 
     @Override
@@ -113,5 +153,13 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
     public void onPause() {
         super.onPause();
         prefs.unregisterOnSharedPreferenceChangeListener(listener);
+    }
+
+    private void sendInvitation() {
+        Intent intent = new AppInviteInvitation.IntentBuilder(getString(R.string.invitation_title))
+                .setMessage(getString(R.string.invitation_message))
+                .setCallToActionText(getString(R.string.invitation_cta))
+                .build();
+        startActivityForResult(intent, REQUEST_INVITE);
     }
 }

@@ -34,13 +34,16 @@
         android:title="@string/social">
 
         <Preference
+            android:key="rate"
+            android:title="@string/rate"/>
+
+        <Preference
             android:key="share"
             android:title="@string/share"/>
 
         <Preference
-            android:key="rate"
-            android:title="@string/rate"/>
-
+            android:key="invite"
+            android:title="@string/invite"/>
     </PreferenceCategory>
 
 

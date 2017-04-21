@@ -4,4 +4,7 @@
         <item>@string/english_us</item>
         <item>@string/english_uk</item>
     </string-array>
+    <string-array name="check_to_update">
+        <item>@string/dont_check</item>
+    </string-array>
 </resources>

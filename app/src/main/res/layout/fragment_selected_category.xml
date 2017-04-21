@@ -3,9 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+
+    <!--<android.support.v7.widget.Toolbar-->
+        <!--android:id="@+id/toolbar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="?attr/actionBarSize"-->
+        <!--android:background="@color/colorPrimary"-->
+        <!--android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"-->
+        <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />-->
+
+
+    <me.yokeyword.indexablerv.IndexableLayout
+        android:id="@+id/indexable_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        app:indexBar_layout_width="24dp"
+        app:indexBar_background="#08000000"
+        app:indexBar_textColor="#000000"
+        app:indexBar_selectedTextColor="@color/colorPrimary"
+        app:indexBar_textSize="14sp"
+        app:indexBar_textSpace="6dp"/>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_centerInParent="true"/>
+
 </RelativeLayout>

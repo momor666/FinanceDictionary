@@ -4,5 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="collapse_layout_height">250dp</dimen>
     <dimen name="card_margin">16dp</dimen>
+    <dimen name="item_list_horizontal_margin">10dp</dimen>
 
 </resources>

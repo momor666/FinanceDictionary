@@ -1,9 +1,10 @@
 package com.nakhmedov.finance.ui;
 
 import android.app.Application;
+import android.content.Context;
 
+import com.nakhmedov.finance.db.DbUpgradeHelper;
 import com.nakhmedov.finance.ui.entity.DaoMaster;
-import com.nakhmedov.finance.ui.entity.DaoMaster.DevOpenHelper;
 import com.nakhmedov.finance.ui.entity.DaoSession;
 
 import org.greenrobot.greendao.database.Database;
@@ -18,14 +19,33 @@ import org.greenrobot.greendao.database.Database;
 
 public class FinanceApp extends Application {
 
+    private static Context appContext;
+    private DaoSession daoSession;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
+        appContext = getApplicationContext();
 
-        DevOpenHelper helper = new DevOpenHelper(this, "finance-db");
+        DbUpgradeHelper helper = new DbUpgradeHelper(this, "finance-db");
         Database db = helper.getWritableDb();
-        DaoSession daoSession = new DaoMaster(db).newSession();
+        daoSession = new DaoMaster(db).newSession();
 
+    }
+
+    public DaoSession getDaoSession() {
+        return daoSession;
+    }
+
+    public static Context getAppContext() {
+        return appContext;
+    }
+
+    public static FinanceApp getApplication(Context context) {
+        if (context instanceof FinanceApp) {
+            return (FinanceApp) context;
+        }
+        return (FinanceApp) context.getApplicationContext();
     }
 }

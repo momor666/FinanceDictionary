@@ -1,14 +1,11 @@
 package com.nakhmedov.finance.ui.activity;
 
 import android.content.Intent;
-import android.os.Build;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,25 +14,22 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
-import com.miguelcatalan.materialsearchview.MaterialSearchView;
 import com.nakhmedov.finance.BuildConfig;
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.constants.PrefLab;
+import com.nakhmedov.finance.ui.FinanceApp;
 import com.nakhmedov.finance.ui.adapter.MainMenuAdapter;
+import com.nakhmedov.finance.ui.components.UpdateAppDialog;
+import com.nakhmedov.finance.ui.entity.Category;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created with Android Studio
@@ -45,39 +39,25 @@ import butterknife.ButterKnife;
  * To change this template use File | Settings | File Templates
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private String TAG = MainActivity.class.getCanonicalName();
 
     @BindView(R.id.gridview) GridView gridView;
-    @BindView(R.id.adView) AdView mAdView;
-    @BindView(R.id.toolbar) Toolbar mToolbar;
-    @BindView(R.id.search_view) MaterialSearchView searchView;
-
-    // Remote Config keys
-    private static final String BANNER_ADS_KEY = "banner_ads_enabled";
-    private static final String INSERTIAL_ADS_KEY = "insertial_ads_enabled";
-    private static final String APP_LAST_VERSION_KEY = "app_last_version_code";
 
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     @Override
+    public int getLayoutResourceId() {
+        return R.layout.activity_main;
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        ButterKnife.bind(this);
-
-        setSupportActionBar(mToolbar);
-
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice("9955D816375FF5AF7DDE1FAA0B2B0413")
-                .build();
-        mAdView.loadAd(adRequest);
-
-
+        List<Category> categoryList = ((FinanceApp) getApplication()).getDaoSession().getCategoryDao().loadAll();
         /*Firebase*/
-
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         FirebaseRemoteConfigSettings mRemoteConfigSettings = new FirebaseRemoteConfigSettings
                 .Builder()
@@ -133,68 +113,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        searchView = (MaterialSearchView) findViewById(R.id.search_view);
-        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                //Do some magic
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                //Do some magic
-                return false;
-            }
-        });
-
-        searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
-            @Override
-            public void onSearchViewShown() {
-                //Do some magic
-            }
-
-            @Override
-            public void onSearchViewClosed() {
-                //Do some magic
-            }
-        });
-
-        searchView.setVoiceSearch(true); //or false
-
-
-    }
-
-    @Override
-    public void onPause() {
-        if (mAdView != null) {
-            mAdView.pause();
-        }
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        if (mAdView != null) {
-            mAdView.resume();
-        }
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        if (mAdView != null) {
-            mAdView.destroy();
-        }
-        super.onDestroy();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        MenuItem item = menu.findItem(R.id.action_search);
-        searchView.setMenuItem(item);
 
         return true;
     }
@@ -202,28 +125,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_search: {
+                startActivity(new Intent(MainActivity.this, SearchActivity.class));
+                break;
+            }
             case R.id.action_settings: {
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                 break;
             }
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == MaterialSearchView.REQUEST_VOICE && resultCode == RESULT_OK) {
-            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (matches != null && matches.size() > 0) {
-                String searchWrd = matches.get(0);
-                if (!TextUtils.isEmpty(searchWrd)) {
-                    searchView.setQuery(searchWrd, false);
-                }
-            }
-
-            return;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void fetchRemoteConfig() {
@@ -257,8 +168,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyConfigs() {
-        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(BANNER_ADS_KEY) +"");
-        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(INSERTIAL_ADS_KEY) + "");
-        Log.i(TAG, mFirebaseRemoteConfig.getLong(APP_LAST_VERSION_KEY) +"");
+        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(PrefLab.BANNER_ADS_KEY) +"");
+        Log.i(TAG, mFirebaseRemoteConfig.getBoolean(PrefLab.INSERTIAL_ADS_KEY) + "");
+        Log.i(TAG, mFirebaseRemoteConfig.getLong(PrefLab.APP_LAST_VERSION_KEY) +"");
+        boolean isBannerAdsEnabled = mFirebaseRemoteConfig.getBoolean(PrefLab.BANNER_ADS_KEY);
+        boolean isInsertialAdsEnabled = mFirebaseRemoteConfig.getBoolean(PrefLab.INSERTIAL_ADS_KEY);
+        int appLastVersionCode = (int) mFirebaseRemoteConfig.getLong(PrefLab.APP_LAST_VERSION_KEY);
+        prefs.edit()
+                .putBoolean(PrefLab.BANNER_ADS_KEY, isBannerAdsEnabled)
+                .putBoolean(PrefLab.INSERTIAL_ADS_KEY, isInsertialAdsEnabled)
+                .putInt(PrefLab.APP_LAST_VERSION_KEY, appLastVersionCode)
+                .apply();
+
+//        loadAds();TODO check ads loaded remote config
+        checkAppNewVersion(appLastVersionCode);
+
+    }
+
+
+    private void checkAppNewVersion(int appLastVersionCode) {
+        int currentVersionCode = getCurrentVersionCode();
+        if (appLastVersionCode > currentVersionCode) {
+            if (prefs.getBoolean(PrefLab.NTFY_NEW_VERSION, true)) {
+                UpdateAppDialog updateAppDialog = new UpdateAppDialog();
+                updateAppDialog.showUpdateDialog(MainActivity.this);
+            }
+        }
+    }
+
+    private int getCurrentVersionCode() {
+        try {
+            PackageInfo managerInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return managerInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return 1;
     }
 }

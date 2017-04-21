@@ -22,10 +22,13 @@ public class Category {
     @NotNull
     private String name;
 
-    @Generated(hash = 2033714148)
-    public Category(Long id, @NotNull String name) {
+    private boolean starred;
+
+    @Generated(hash = 1949678304)
+    public Category(Long id, @NotNull String name, boolean starred) {
         this.id = id;
         this.name = name;
+        this.starred = starred;
     }
 
     @Generated(hash = 1150634039)
@@ -50,5 +53,13 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean getStarred() {
+        return this.starred;
+    }
+
+    public void setStarred(boolean starred) {
+        this.starred = starred;
     }
 }
