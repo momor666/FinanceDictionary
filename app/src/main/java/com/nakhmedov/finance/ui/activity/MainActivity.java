@@ -1,5 +1,9 @@
 package com.nakhmedov.finance.ui.activity;
 
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -9,10 +13,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -21,15 +21,12 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.nakhmedov.finance.BuildConfig;
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.constants.ContextConstants;
 import com.nakhmedov.finance.constants.PrefLab;
-import com.nakhmedov.finance.ui.FinanceApp;
-import com.nakhmedov.finance.ui.adapter.MainMenuAdapter;
 import com.nakhmedov.finance.ui.components.UpdateAppDialog;
-import com.nakhmedov.finance.ui.entity.Category;
-
-import java.util.List;
-
-import butterknife.BindView;
+import com.nakhmedov.finance.ui.fragment.MainFragment;
+import com.nakhmedov.finance.ui.receiver.DailyReceiver;
+import com.nakhmedov.finance.util.AndroidUtil;
 
 /**
  * Created with Android Studio
@@ -43,9 +40,8 @@ public class MainActivity extends BaseActivity {
 
     private String TAG = MainActivity.class.getCanonicalName();
 
-    @BindView(R.id.gridview) GridView gridView;
-
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
+    public static final int DAILY_REQ_CODE = 101;
 
     @Override
     public int getLayoutResourceId() {
@@ -56,7 +52,16 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        List<Category> categoryList = ((FinanceApp) getApplication()).getDaoSession().getCategoryDao().loadAll();
+        if (savedInstanceState == null) {
+            MainFragment mainFragment = MainFragment.newInstance();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.content_frame, mainFragment)
+                    .commit();
+        }
+
+        prefs.edit().putBoolean(PrefLab.DISPLAY_INSERTIAL, true).apply();
+
         /*Firebase*/
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         FirebaseRemoteConfigSettings mRemoteConfigSettings = new FirebaseRemoteConfigSettings
@@ -70,49 +75,22 @@ public class MainActivity extends BaseActivity {
         /*Fetch remote config*/
 
         fetchRemoteConfig();
+        boolean isDailyNotification = prefs.getBoolean("pref_ntfy_daily_term", true);
+        if (isDailyNotification) {
+            Intent intent = new Intent(MainActivity.this, DailyReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, DAILY_REQ_CODE,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        MainMenuAdapter menuAdapter = new MainMenuAdapter(MainActivity.this);
-        gridView.setAdapter(menuAdapter);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, AndroidUtil.getAlarmTime(),  AlarmManager.INTERVAL_DAY, pendingIntent);
+        }
+    }
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "Clicked position = " + position, Toast.LENGTH_SHORT).show();
-
-                switch (position) {
-                    case 0: {
-                        Intent categoryIntent = new Intent(MainActivity.this, CategoryActivity.class);
-                        categoryIntent.putExtra(CategoryActivity.EXTRA_VIEW_POSITION, CategoryActivity.CATEGORY_POSITION);
-                        startActivity(categoryIntent);
-                        break;
-                    }
-                    case 1: {
-                        Intent quizIntent = new Intent(MainActivity.this, CategoryActivity.class);
-                        quizIntent.putExtra(CategoryActivity.EXTRA_VIEW_POSITION, CategoryActivity.QUIZ_POSITION);
-                        startActivity(quizIntent);
-                        break;
-                    }
-                    case 2: {
-
-                        break;
-                    }
-                    case 3: {
-
-                        break;
-                    }
-                    case 4: {
-                        Intent starredIntent = new Intent(MainActivity.this, CategoryActivity.class);
-                        starredIntent.putExtra(CategoryActivity.EXTRA_VIEW_POSITION, CategoryActivity.STARRED_POSITION);
-                        startActivity(starredIntent);
-                        break;
-                    }
-                    case 5: {
-
-                        break;
-                    }
-                }
-            }
-        });
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(ContextConstants.NTFY_DAILY_ID);
     }
 
     @Override
@@ -125,6 +103,10 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home: {
+                onBackPressed();
+                break;
+            }
             case R.id.action_search: {
                 startActivity(new Intent(MainActivity.this, SearchActivity.class));
                 break;
@@ -135,6 +117,15 @@ public class MainActivity extends BaseActivity {
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     private void fetchRemoteConfig() {
@@ -171,16 +162,19 @@ public class MainActivity extends BaseActivity {
         Log.i(TAG, mFirebaseRemoteConfig.getBoolean(PrefLab.BANNER_ADS_KEY) +"");
         Log.i(TAG, mFirebaseRemoteConfig.getBoolean(PrefLab.INSERTIAL_ADS_KEY) + "");
         Log.i(TAG, mFirebaseRemoteConfig.getLong(PrefLab.APP_LAST_VERSION_KEY) +"");
+        Log.i(TAG, mFirebaseRemoteConfig.getLong(PrefLab.UPDATE_DATA_PERIOD) +"");
         boolean isBannerAdsEnabled = mFirebaseRemoteConfig.getBoolean(PrefLab.BANNER_ADS_KEY);
         boolean isInsertialAdsEnabled = mFirebaseRemoteConfig.getBoolean(PrefLab.INSERTIAL_ADS_KEY);
         int appLastVersionCode = (int) mFirebaseRemoteConfig.getLong(PrefLab.APP_LAST_VERSION_KEY);
+        int updatePeriodInDay = (int) mFirebaseRemoteConfig.getLong(PrefLab.UPDATE_DATA_PERIOD);
         prefs.edit()
                 .putBoolean(PrefLab.BANNER_ADS_KEY, isBannerAdsEnabled)
                 .putBoolean(PrefLab.INSERTIAL_ADS_KEY, isInsertialAdsEnabled)
                 .putInt(PrefLab.APP_LAST_VERSION_KEY, appLastVersionCode)
+                .putInt(PrefLab.UPDATE_DATA_PERIOD, updatePeriodInDay)
                 .apply();
 
-//        loadAds();TODO check ads loaded remote config
+        loadAds();
         checkAppNewVersion(appLastVersionCode);
 
     }

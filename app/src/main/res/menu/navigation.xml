@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/navigation_category"
-        android:icon="@drawable/ic_home_black_24dp"
+        android:icon="@drawable/ic_category_black_24dp"
         android:title="@string/categories"
         app:showAsAction="ifRoom"/>
 
@@ -16,7 +16,7 @@
 
     <item
         android:id="@+id/navigation_quiz"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@drawable/ic_quiz_black_24dp"
         android:title="@string/quiz"
         app:showAsAction="ifRoom"/>
 

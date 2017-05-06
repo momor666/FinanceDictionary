@@ -12,7 +12,6 @@ import android.support.v4.app.DialogFragment;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.ContextConstants;
 import com.nakhmedov.finance.constants.PrefLab;
-import com.nakhmedov.finance.ui.activity.MainActivity;
 
 /**
  * Created with Android Studio

@@ -16,26 +16,11 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:layout_collapseMode="pin"
+            app:elevation="0dp"
             android:background="@color/colorPrimary"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     </android.support.design.widget.AppBarLayout>
-
-    <GridView
-        android:id="@+id/gridview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:columnWidth="150dp"
-        android:padding="5dp"
-        android:verticalSpacing="3dp"
-        android:horizontalSpacing="3dp"
-        android:numColumns="auto_fit"
-        android:layout_marginBottom="5dp"
-        android:layout_above="@id/adView"
-        android:layout_below="@id/appbarlayout"
-        android:gravity="center"
-        android:stretchMode="columnWidth">
-    </GridView>
 
     <include
         android:id="@+id/adView"
@@ -43,6 +28,14 @@
         android:layout_alignParentBottom="true"
         android:layout_height="wrap_content"
         android:layout_width="match_parent" />
+
+    <FrameLayout
+        android:name="com.nakhmedov.finance.ui.fragment.LoanFragment"
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/appbarlayout"
+        android:layout_above="@+id/adView"/>
 
 
 </RelativeLayout>

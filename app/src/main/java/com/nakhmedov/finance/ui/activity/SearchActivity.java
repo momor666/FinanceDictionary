@@ -3,34 +3,34 @@ package com.nakhmedov.finance.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.ContextConstants;
+import com.nakhmedov.finance.db.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.RecentSearches;
+import com.nakhmedov.finance.db.entity.RecentSearchesDao;
+import com.nakhmedov.finance.db.entity.Term;
+import com.nakhmedov.finance.db.entity.TermDao;
 import com.nakhmedov.finance.net.FinanceHttpService;
 import com.nakhmedov.finance.ui.FinanceApp;
 import com.nakhmedov.finance.ui.adapter.SearchAdapter;
-import com.nakhmedov.finance.ui.entity.DaoSession;
-import com.nakhmedov.finance.ui.entity.RecentSearches;
-import com.nakhmedov.finance.ui.entity.Term;
-import com.nakhmedov.finance.ui.entity.TermDao;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.DoubleAdder;
 
 import butterknife.BindView;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -54,6 +54,7 @@ public class SearchActivity extends BaseActivity {
     @BindView(R.id.search_view) SearchView mSearchView;
     @BindView(R.id.searchRecyclerView) RecyclerView mRecyclerView;
     @BindView(R.id.progress_bar) ProgressBar mProgressBar;
+    @BindView(R.id.empty_view) View emptyView;
 
     private SearchAdapter mSearchAdapter;
     private DaoSession daoSession;
@@ -78,13 +79,16 @@ public class SearchActivity extends BaseActivity {
         daoSession = ((FinanceApp) getApplicationContext()).getDaoSession();
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(SearchActivity.this));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.setHasFixedSize(true);
+
         mSearchAdapter = new SearchAdapter(SearchActivity.this, mListener);
         mRecyclerView.setAdapter(mSearchAdapter);
 
-        getUserSearchHistory();
+        showUserSearchHistory();
     }
 
-    private void getUserSearchHistory() {
+    private void showUserSearchHistory() {
         List<RecentSearches> histories = daoSession
                 .getRecentSearchesDao()
                 .loadAll();
@@ -105,7 +109,12 @@ public class SearchActivity extends BaseActivity {
 
             @Override
             public boolean onQueryTextChange(String termName) {
-                doSearch(termName, false);
+                displayHideEmptyView(1);
+                if (termName.isEmpty()) {
+                    showUserSearchHistory();
+                } else {
+                    doSearch(termName, false);
+                }
 
                 return false;
             }
@@ -118,6 +127,18 @@ public class SearchActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home: {
+                finish();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     private OnSearchSubmitListener mListener = new OnSearchSubmitListener() {
         @Override
@@ -141,9 +162,16 @@ public class SearchActivity extends BaseActivity {
         Log.i(TAG, "Saved to RECENT = " + selectedTerm.getName());
 
         RecentSearches searches = new RecentSearches(selectedTerm.getName());
-        daoSession
+        int count = (int) daoSession
                 .getRecentSearchesDao()
-                .insert(searches);
+                .queryBuilder()
+                .where(RecentSearchesDao.Properties.RecentTermName.like(searches.getRecentTermName().toLowerCase()))
+                .count();
+        if (count == 0) {
+            daoSession
+                    .getRecentSearchesDao()
+                    .insert(searches);
+        }
     }
 
     private void displaySelectedTerm(Term selectedTerm) {
@@ -168,7 +196,7 @@ public class SearchActivity extends BaseActivity {
                 .list();
         Log.i(TAG, "doSearch query = " + query + " ; result = " + possibleTerms.size());
 
-        if (isSubmitted && possibleTerms.isEmpty()) {
+        if (isSubmitted) {
             doRemoteSearch(searchTermName);
             return;
         }
@@ -200,19 +228,9 @@ public class SearchActivity extends BaseActivity {
             @Override
             public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
                 Log.i(TAG, "doRemoteSearch onResponse = " + response.toString());
-                JsonArray result = response.body();
-                List<Term> termList = new ArrayList<Term>(result.size());
-                for (int i = 0; i < result.size(); i++) {
-                    Gson gsonObj = new Gson();
-                    Term term = gsonObj.fromJson(result.get(i), Term.class);
-                    daoSession
-                            .getTermDao()
-                            .insert(term);
-                    termList.add(term);
+                if (response.isSuccessful()) {
+                    doProcess(response);
                 }
-                List<RecentSearches> list = new ArrayList(termList);
-                mSearchAdapter.swapData(list);
-                hideDialog();
             }
 
             @Override
@@ -220,9 +238,46 @@ public class SearchActivity extends BaseActivity {
                 Log.i(TAG, "doRemoteSearch onFailure = " + throwable.getMessage());
                 throwable.printStackTrace();
                 hideDialog();
+                displayHideEmptyView(0);
             }
         });
 
+    }
+
+    private void doProcess(final Response<JsonArray> response) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JsonArray result = response.body();
+                final List<Term> termList = new ArrayList<>(result.size());
+                for (int i = 0; i < result.size(); i++) {
+                    Gson gsonObj = new Gson();
+                    Term term = gsonObj.fromJson(result.get(i), Term.class);
+                    Term localTerm = daoSession
+                            .getTermDao()
+                            .queryBuilder()
+                            .where(TermDao.Properties.Id.eq(term.getId()))
+                            .unique();
+                    if (localTerm == null) {
+                        daoSession
+                                .getTermDao()
+                                .insert(term);
+                        termList.add(term);
+                    } else {
+                        termList.add(localTerm);
+                    }
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<RecentSearches> list = new ArrayList(termList);
+                        mSearchAdapter.swapData(list);
+                        hideDialog();
+                        displayHideEmptyView(termList.size());
+                    }
+                });
+            }
+        }).start();
     }
 
     private void showDialog() {
@@ -231,6 +286,10 @@ public class SearchActivity extends BaseActivity {
 
     private void hideDialog() {
         mProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void displayHideEmptyView(int size) {
+        emptyView.setVisibility(size == 0 ? View.VISIBLE : View.INVISIBLE);
     }
 
 }

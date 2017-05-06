@@ -1,5 +1,6 @@
 package com.nakhmedov.finance.ui.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -9,20 +10,20 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.activity.CategoryActivity;
+import com.nakhmedov.finance.ui.activity.SearchActivity;
+import com.nakhmedov.finance.ui.activity.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 /**
  * Created with Android Studio
@@ -32,13 +33,12 @@ import butterknife.Unbinder;
  * To change this template use File | Settings | File Templates
  */
 
-public class CategoryFragment extends Fragment {
+public class CategoryFragment extends BaseFragment {
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.appbar) AppBarLayout appBarLayout;
     @BindView(R.id.viewpager) ViewPager viewPager;
     @BindView(R.id.category_tabs) TabLayout tabLayout;
-    private Unbinder unbinder;
 
     public static CategoryFragment newInstance() {
         return new CategoryFragment();
@@ -47,19 +47,17 @@ public class CategoryFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        setHasOptionsMenu(true);
     }
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_category, container, false);
+    public int getLayoutId() {
+        return R.layout.fragment_category;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        unbinder = ButterKnife.bind(this, view);
 
         Adapter adapter = new Adapter(getChildFragmentManager());
         adapter.addFragment(CategoryListFragment.newInstance(CategoryListFragment.ALL), getString(R.string.all));
@@ -68,33 +66,28 @@ public class CategoryFragment extends Fragment {
         tabLayout.setupWithViewPager(viewPager);
 
         ((CategoryActivity) getActivity()).setSupportActionBar(mToolbar);
-        ((CategoryActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         ((CategoryActivity) getActivity()).setToolbarTitle(getString(R.string.categories));
-
-
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unbinder.unbind();
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.main_menu, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home: {
-                getActivity().onBackPressed();
+            case R.id.action_search: {
+                startActivity(new Intent(getActivity(), SearchActivity.class));
                 break;
             }
+            case R.id.action_settings: {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                break;
+            }
+
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        return super.onContextItemSelected(item);
     }
 
     private class Adapter extends FragmentStatePagerAdapter {

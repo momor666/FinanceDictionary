@@ -1,14 +1,12 @@
 package com.nakhmedov.finance.ui.activity;
 
-import android.content.Intent;
+import android.app.NotificationManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
-import android.support.v4.app.TaskStackBuilder;
 
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.constants.ContextConstants;
 import com.nakhmedov.finance.ui.fragment.ContentTermsFragment;
-import com.nakhmedov.finance.ui.fragment.SelectedCategory;
 import com.nakhmedov.finance.ui.fragment.ViewTermContent;
 
 /**
@@ -22,6 +20,7 @@ import com.nakhmedov.finance.ui.fragment.ViewTermContent;
 public class SelectedTermActivity extends BaseActivity implements ContentTermsFragment.OnTermsPositionChangeListener {
     public static final String EXTRA_TERM_ID = "extra_term_id";
     public static final String EXTRA_CATEGORY_ID = "extra_category_id";
+    public static final String EXTRA_DAILY_ALARM = "extra_daily_alarm";
 
     @Override
     public int getLayoutResourceId() {
@@ -44,6 +43,11 @@ public class SelectedTermActivity extends BaseActivity implements ContentTermsFr
         if (extras != null) {
             extraTermId = extras.getLong(EXTRA_TERM_ID);
             extraCategoryId = extras.getLong(EXTRA_CATEGORY_ID);
+            boolean isDailyAlarm = extras.getBoolean(EXTRA_DAILY_ALARM);
+            if (isDailyAlarm) {
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                mNotificationManager.cancel(ContextConstants.NTFY_DAILY_ID);
+            }
         }
         if (savedInstanceState == null) {
             ContentTermsFragment selectedTermFragment = (ContentTermsFragment) ContentTermsFragment.newInstance(extraTermId, extraCategoryId);

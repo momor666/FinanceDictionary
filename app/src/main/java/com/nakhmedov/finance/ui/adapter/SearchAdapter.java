@@ -10,9 +10,9 @@ import android.widget.TextView;
 
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.ContextConstants;
+import com.nakhmedov.finance.db.entity.RecentSearches;
+import com.nakhmedov.finance.db.entity.Term;
 import com.nakhmedov.finance.ui.activity.SearchActivity;
-import com.nakhmedov.finance.ui.entity.RecentSearches;
-import com.nakhmedov.finance.ui.entity.Term;
 
 import java.util.ArrayList;
 import java.util.List;

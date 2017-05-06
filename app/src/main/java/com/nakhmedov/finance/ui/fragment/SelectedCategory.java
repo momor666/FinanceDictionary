@@ -1,51 +1,46 @@
 package com.nakhmedov.finance.ui.fragment;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
 import com.nakhmedov.finance.R;
-import com.nakhmedov.finance.constants.ContextConstants;
-import com.nakhmedov.finance.net.FinanceHttpService;
+import com.nakhmedov.finance.constants.ActionNames;
+import com.nakhmedov.finance.constants.ExtrasNames;
+import com.nakhmedov.finance.constants.PrefLab;
+import com.nakhmedov.finance.db.entity.Category;
+import com.nakhmedov.finance.db.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.Term;
+import com.nakhmedov.finance.db.entity.TermDao;
 import com.nakhmedov.finance.ui.FinanceApp;
+import com.nakhmedov.finance.ui.activity.BaseActivity;
+import com.nakhmedov.finance.ui.activity.SearchActivity;
 import com.nakhmedov.finance.ui.activity.SelectedCategoryActivity;
 import com.nakhmedov.finance.ui.adapter.TermsAdapter;
-import com.nakhmedov.finance.ui.entity.Category;
-import com.nakhmedov.finance.ui.entity.DaoSession;
-import com.nakhmedov.finance.ui.entity.Term;
-import com.nakhmedov.finance.ui.entity.TermDao;
+import com.nakhmedov.finance.ui.service.TermUpdateService;
+import com.nakhmedov.finance.util.AndroidUtil;
 
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 import me.yokeyword.indexablerv.IndexableAdapter;
 import me.yokeyword.indexablerv.IndexableLayout;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created with Android Studio
@@ -55,18 +50,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * To change this template use File | Settings | File Templates
  */
 
-public class SelectedCategory extends Fragment {
+public class SelectedCategory extends BaseFragment {
 
     private static final String TAG = SelectedCategory.class.getCanonicalName();
 
     OnTermSelectedListener mCallback;
 
     @BindView(R.id.indexable_recycler_view) IndexableLayout indexableLayout;
-    @BindView(R.id.progress_bar) ProgressBar progressBar;
-//    @BindView(R.id.toolbar) Toolbar mToolbar;
 
     public static final String FRAG_TAG = "SelectedCategory";
-    private Unbinder unbinder;
     private TermsAdapter termsAdapter;
     private long extraCategoryId;
 
@@ -88,23 +80,22 @@ public class SelectedCategory extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-//        setRetainInstance(true);
-        setHasOptionsMenu(true);
+    public int getLayoutId() {
+        return R.layout.fragment_selected_category;
     }
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return LayoutInflater.from(getContext()).inflate(R.layout.fragment_selected_category, container, false);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        IntentFilter intentFilter = new IntentFilter(ActionNames.UPDATE_TERM_LIST);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(termReceiver, intentFilter);
+
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        unbinder = ButterKnife.bind(this, view);
 
         ((SelectedCategoryActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -133,15 +124,9 @@ public class SelectedCategory extends Fragment {
                     bundle.getString(SelectedCategoryActivity.EXTRA_NAME));
 
             extraCategoryId = bundle.getLong(SelectedCategoryActivity.EXTRA_CATEGORY_ID);
-            loadTermsByCategoryId(extraCategoryId);
+            loadTermsByCategoryId(extraCategoryId, true);
         }
 
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unbinder.unbind();
     }
 
     @Override
@@ -185,7 +170,7 @@ public class SelectedCategory extends Fragment {
                 break;
             }
             case R.id.action_search: {
-
+                startActivity(new Intent(getContext(), SearchActivity.class));
                 break;
             }
             default: {
@@ -196,7 +181,13 @@ public class SelectedCategory extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    private void loadTermsByCategoryId(final long categoryId) {
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(termReceiver);
+    }
+
+    private void loadTermsByCategoryId(long categoryId, boolean withService) {
         showLoading();
         final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
         final List<Term> termList = daoSession
@@ -205,48 +196,18 @@ public class SelectedCategory extends Fragment {
                 .where(TermDao.Properties.CategoryId.eq(categoryId))
                 .build()
                 .list();
-        if (termList.isEmpty()) {
+        updateTermsListUI(termList);
 
-            Gson gson = new GsonBuilder()
-                    .setLenient()
-                    .create();
-            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(interceptor)
-                    .build();
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(ContextConstants.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build();
+        Category category = daoSession.getCategoryDao().load(categoryId);
+        int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
+        long lastUpdateTime = category.getLastTermsUpdateTime();
 
-            FinanceHttpService service = retrofit.create(FinanceHttpService.class);
-            service.listTermsBy(categoryId).enqueue(new Callback<JsonArray>() {
-                @Override
-                public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
-                    Log.i(TAG, "response = " + response.toString());
-                    JsonArray result = response.body();
-                    for (int i = 0; i < result.size(); i++) {
-                        Gson gsonObj = new Gson();
-                        Term term = gsonObj.fromJson(result.get(i), Term.class);
-                        daoSession
-                                .getTermDao()
-                                .insert(term);
-                        termList.add(term);
-                    }
-
-                    updateTermsListUI(termList);
-                }
-
-                @Override
-                public void onFailure(Call<JsonArray> call, Throwable throwable) {
-
-                    hideLoading();
-                }
-            });
-        } else {
-            updateTermsListUI(termList);
+        if (withService && (lastUpdateTime == 0 ||
+                AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+            showLoading();
+            Intent termServiceIntent = new Intent(getContext(), TermUpdateService.class);
+            termServiceIntent.putExtra(TermUpdateService.EXTRA_CATEGORY_ID, categoryId);
+            getActivity().startService(termServiceIntent);
         }
     }
 
@@ -255,11 +216,31 @@ public class SelectedCategory extends Fragment {
         hideLoading();
     }
 
-    private void showLoading() {
-        progressBar.setVisibility(View.VISIBLE);
+    private BroadcastReceiver termReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "onReceive");
+            if (intent.getAction().equals(ActionNames.UPDATE_TERM_LIST)) {
+                hideLoading();
+                if (intent.getExtras().getBoolean(ExtrasNames.TERM_UPDATE_RESULT)) {
+                    long categoryId = intent.getExtras().getLong(TermUpdateService.EXTRA_CATEGORY_ID);
+                    loadTermsByCategoryId(categoryId, false);
+                } else {
+                    Snackbar.make(indexableLayout, getString(R.string.term_update_failed), Snackbar.LENGTH_LONG)
+                            .setAction(getString(R.string.retry), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    loadTermsByCategoryId(extraCategoryId, true);
+                                }
+                            })
+                            .show();
+                }
+            }
+        }
+    };
+
+    private void showMessage(String msgText) {
+        Snackbar.make(indexableLayout, msgText, Snackbar.LENGTH_SHORT).show();
     }
 
-    private void hideLoading() {
-        progressBar.setVisibility(View.INVISIBLE);
-    }
 }

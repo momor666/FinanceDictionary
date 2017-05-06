@@ -10,9 +10,9 @@ import android.widget.TextView;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.db.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.Term;
 import com.nakhmedov.finance.ui.FinanceApp;
-import com.nakhmedov.finance.ui.entity.DaoSession;
-import com.nakhmedov.finance.ui.entity.Term;
 import com.nakhmedov.finance.ui.fragment.StarredFragment;
 
 import java.util.ArrayList;
@@ -50,8 +50,8 @@ public class StarredAdapter extends RecyclerView.Adapter<StarredAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
-        final int selectedPosition = holder.getAdapterPosition();
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+        int selectedPosition = holder.getAdapterPosition();
         final Term selectedTerm = termListList.get(selectedPosition);
 
         holder.starredTextView.setText(selectedTerm.getName());
@@ -77,8 +77,11 @@ public class StarredAdapter extends RecyclerView.Adapter<StarredAdapter.ViewHold
                 daoSession.getTermDao()
                         .update(selectedTerm);
 
-                termListList.remove(selectedPosition);
-                notifyItemRemoved(selectedPosition);
+                termListList.remove(selectedTerm);
+                notifyItemRemoved(holder.getAdapterPosition());
+                if (termListList.size() == 0) {
+                    notifyDataSetChanged();
+                }
 
             }
         });

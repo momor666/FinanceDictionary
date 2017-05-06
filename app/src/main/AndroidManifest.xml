@@ -9,6 +9,19 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
+     See README(https://goo.gl/l4GJaQ) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_app_ntfy" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorPrimary" />
+        AndroidManifest.xml
+
         <activity
             android:name=".ui.activity.MainActivity"
             android:configChanges="orientation|screenSize"
@@ -21,27 +34,65 @@
         </activity>
 
         <activity android:name=".ui.activity.CategoryActivity"
-            android:configChanges="orientation|screenSize"
-            android:parentActivityName=".ui.activity.MainActivity"/>
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
 
         <activity android:name=".ui.activity.SelectedCategoryActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".ui.activity.CategoryActivity"/>
+            android:parentActivityName=".ui.activity.CategoryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.CategoryActivity" />
+        </activity>
 
         <activity android:name=".ui.activity.SelectedTermActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".ui.activity.SelectedCategoryActivity"/>
+            android:parentActivityName=".ui.activity.SelectedCategoryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.SelectedCategoryActivity" />
+        </activity>
 
         <activity android:name=".ui.activity.SettingsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".ui.activity.MainActivity"/>
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
 
         <activity android:name=".ui.activity.SearchActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".ui.activity.MainActivity"/>
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
 
 
         <receiver android:name=".ui.receiver.DailyReceiver"/>
+
+        <service android:name=".ui.service.CategoryUpdateService"/>
+        <service android:name=".ui.service.TermUpdateService"/>
+
+        <service
+            android:name=".ui.service.FirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".ui.service.FirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+
 
     </application>
 

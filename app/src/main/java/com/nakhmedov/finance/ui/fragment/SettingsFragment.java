@@ -1,6 +1,9 @@
 package com.nakhmedov.finance.ui.fragment;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -9,16 +12,15 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.appinvite.AppInviteInvitation;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.PrefLab;
+import com.nakhmedov.finance.ui.activity.MainActivity;
+import com.nakhmedov.finance.ui.receiver.DailyReceiver;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -69,7 +71,16 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
                         break;
                     }
                     case PrefLab.NTFY_DAILY_TERM: {
+                        boolean isNtfyDisabled = sharedPreferences.getBoolean(key, false);
+                        if (isNtfyDisabled) {
+                            Intent intent = new Intent(getActivity(), DailyReceiver.class);
+                            PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), MainActivity.DAILY_REQ_CODE,
+                                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+                            AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+                            alarmManager.cancel(pendingIntent);
+
+                        }
                         break;
                     }
                     case PrefLab.NTFY_NEW_VERSION: {

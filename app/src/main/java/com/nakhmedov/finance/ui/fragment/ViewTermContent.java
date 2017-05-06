@@ -3,23 +3,21 @@ package com.nakhmedov.finance.ui.fragment;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,21 +30,22 @@ import com.like.OnLikeListener;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.ContextConstants;
 import com.nakhmedov.finance.constants.PrefLab;
+import com.nakhmedov.finance.db.entity.Category;
+import com.nakhmedov.finance.db.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.Term;
 import com.nakhmedov.finance.net.FinanceHttpService;
 import com.nakhmedov.finance.ui.FinanceApp;
-import com.nakhmedov.finance.ui.activity.SelectedCategoryActivity;
 import com.nakhmedov.finance.ui.activity.SelectedTermActivity;
-import com.nakhmedov.finance.ui.entity.DaoSession;
-import com.nakhmedov.finance.ui.entity.Term;
+import com.nakhmedov.finance.ui.activity.SettingsActivity;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.Unbinder;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -62,83 +61,47 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * To change this template use File | Settings | File Templates
  */
 
-public class ViewTermContent extends Fragment {
+public class ViewTermContent extends BaseFragment {
 
     private static final String TAG = ViewTermContent.class.getCanonicalName();
 
     @BindView(R.id.collapsing_toolbar) CollapsingToolbarLayout termView;
     @BindView(R.id.definition_view) TextView definitionView;
-    @BindView(R.id.progress_bar) ProgressBar progressBar;
-//    @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.fabtoolbar_fab) FloatingActionButton fab;
     @BindView(R.id.fabtoolbar) FABToolbarLayout view;
     @BindView(R.id.like_white_btn) LikeButton likeButton;
+    @BindView(R.id.content_view) CoordinatorLayout contentView;
 
     private static final String TERM_ID = "term_id";
+    private static final String KEY_CATEGORY_ID = "category_id";
     private DaoSession daoSession;
-    private static TextToSpeech mTTS;
-    private static MenuItem playItemView;
-    private Unbinder unbinder;
+    private TextToSpeech mTTS;
+    private MenuItem playItemView;
     private Term currentTerm;
+    private ExecutorService executorService;
 
-    public static ViewTermContent newInstance(Long termId) {
+    public static ViewTermContent newInstance(Long termId, Long categoryId) {
         ViewTermContent content = new ViewTermContent();
         Bundle bundle = new Bundle();
         bundle.putLong(TERM_ID, termId);
+        bundle.putLong(KEY_CATEGORY_ID, categoryId);
         content.setArguments(bundle);
         return content;
     }
 
     @Override
+    public int getLayoutId() {
+        return R.layout.fragment_view_content;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         setHasOptionsMenu(true);
-    }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_view_content, container, false);
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        unbinder = ButterKnife.bind(this, view);
-
-        daoSession = FinanceApp.getApplication(getContext())
-                .getDaoSession();
-
-        Bundle bundle = this.getArguments();
-        if (bundle != null) {
-            long termId = bundle.getLong(TERM_ID);
-            currentTerm = daoSession
-                    .getTermDao()
-                    .load(termId);
-            getTermContent(currentTerm);
+        if (executorService == null) {
+            executorService = Executors.newCachedThreadPool();
         }
-
-        likeButton.setOnLikeListener(new OnLikeListener() {
-            @Override
-            public void liked(LikeButton likeButton) {
-                Toast.makeText(getContext(), getString(R.string.add_favourite), Toast.LENGTH_SHORT).show();
-
-                currentTerm.setStarred(true);
-                daoSession.getTermDao()
-                        .update(currentTerm);
-            }
-
-            @Override
-            public void unLiked(LikeButton likeButton) {
-                currentTerm.setStarred(false);
-                daoSession.getTermDao()
-                        .update(currentTerm);
-            }
-        });
-
-        likeButton.setLiked(currentTerm.getStarred());
 
         mTTS = new TextToSpeech(getActivity().getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -154,7 +117,6 @@ public class ViewTermContent extends Fragment {
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(getContext(), "onDone", Toast.LENGTH_SHORT).show();
                                     if (playItemView != null) {
                                         playItemView.setIcon(R.drawable.ic_play_arrow_white);
                                         playItemView.setChecked(false);
@@ -188,13 +150,64 @@ public class ViewTermContent extends Fragment {
                 }
             }
         });
+
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        daoSession = FinanceApp.getApplication(getContext())
+                .getDaoSession();
+
+        Bundle bundle = this.getArguments();
+        if (bundle != null) {
+            long termId = bundle.getLong(TERM_ID);
+            currentTerm = daoSession
+                    .getTermDao()
+                    .load(termId);
+            getTermContent(currentTerm);
+
+            long categoryId = bundle.getLong(KEY_CATEGORY_ID);
+            Category selectedCategory = daoSession
+                    .getCategoryDao()
+                    .load(categoryId);
+
+            if (selectedCategory != null) {
+                ((SelectedTermActivity) getActivity()).setToolbarTitle(selectedCategory.getName());
+            }
+
+        }
+
+        likeButton.setOnLikeListener(new OnLikeListener() {
+            @Override
+            public void liked(LikeButton likeButton) {
+                Toast.makeText(getContext(), getString(R.string.add_favourite), Toast.LENGTH_SHORT).show();
+
+                currentTerm.setStarred(true);
+                daoSession.getTermDao()
+                        .update(currentTerm);
+            }
+
+            @Override
+            public void unLiked(LikeButton likeButton) {
+                currentTerm.setStarred(false);
+                daoSession.getTermDao()
+                        .update(currentTerm);
+            }
+        });
+
+        likeButton.setLiked(currentTerm.getStarred());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unbinder.unbind();
         pauseSpeech(true);
+        if (executorService != null) {
+            executorService.shutdown();
+            executorService = null;
+        }
     }
 
     @Override
@@ -219,6 +232,10 @@ public class ViewTermContent extends Fragment {
                     pauseSpeech(false);
                     item.setIcon(R.drawable.ic_play_arrow_white);
                 }
+                break;
+            }
+            case R.id.action_settings: {
+                startActivity(new Intent(getContext(), SettingsActivity.class));
                 break;
             }
         }
@@ -255,11 +272,13 @@ public class ViewTermContent extends Fragment {
 
     @OnClick(R.id.print_term)
     public void printTerm() {
+        Toast.makeText(getContext(), getString(R.string.we_are_working_hard), Toast.LENGTH_LONG).show();
         view.hide();
     }
 
     @OnClick(R.id.edit_term)
     public void editTerm() {
+        Toast.makeText(getContext(), getString(R.string.we_are_working_hard), Toast.LENGTH_LONG).show();
         view.hide();
     }
 
@@ -303,7 +322,7 @@ public class ViewTermContent extends Fragment {
     }
 
     private void showMessage(int msgText) {
-        Toast.makeText(getContext(), msgText,  Toast.LENGTH_LONG).show();
+        Snackbar.make(getActivity().findViewById(R.id.content_frame), msgText, Snackbar.LENGTH_SHORT).show();
     }
 
     private void setPlayToggleIcon(int icon) {
@@ -312,29 +331,34 @@ public class ViewTermContent extends Fragment {
         }
     }
 
-    private void getTermContent(Term term) {
+    private void getTermContent(final Term term) {
 
         displayTermTitle(term);
         if (term.getDescription() == null) {
             Log.w(TAG, "Term description is null, send request to server termName - " + term.getName());
             showLoading();
-            sendRequest2Content(term);
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    sendRequest2Content(term);
+                }
+            });
         } else {
             displayTermContent(term);
         }
     }
 
-    private void sendRequest2Content(Term currentTerm) {
+    private void sendRequest2Content(final Term currentTerm) {
 //        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 //        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient client = new OkHttpClient.Builder()
+//        OkHttpClient client = new OkHttpClient.Builder()
 //                .addInterceptor(interceptor)
-                .build();
+//                .build();
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .create();
         Retrofit retrofit = new Retrofit.Builder()
-                .client(client)
+//                .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .baseUrl(ContextConstants.BASE_URL)
                 .build();
@@ -344,32 +368,28 @@ public class ViewTermContent extends Fragment {
         service.getTermContent(currentTerm.getId()).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                JsonObject result = response.body();
-                Gson gsonObj = new Gson();
-                Term term = gsonObj.fromJson(result, Term.class);
-                daoSession
-                        .getTermDao()
-                        .update(term);
+                if (response.isSuccessful()) {
+                    JsonObject result = response.body();
+                    Gson gsonObj = new Gson();
+                    Term term = gsonObj.fromJson(result, Term.class);
+                    Log.i(TAG, "response success termName = " + term.getName());
+                    currentTerm.setDescription(term.getDescription());
+                    daoSession
+                            .getTermDao()
+                            .update(currentTerm);
 
-                displayTermContent(term);
+                    displayTermContent(term);
+                }
                 hideLoading();
-                Log.i(TAG, "response success termId" + term.getId());
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable throwable) {
                 throwable.printStackTrace();
+                showMessage(R.string.cant_get_content);
                 hideLoading();
             }
         });
-    }
-
-    private void showLoading() {
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-    private void hideLoading() {
-        progressBar.setVisibility(View.INVISIBLE);
     }
 
     private void displayTermTitle(Term term) {
@@ -377,6 +397,10 @@ public class ViewTermContent extends Fragment {
     }
 
     private void displayTermContent(Term term) {
+        if (definitionView == null) {
+            Log.i(TAG, "Detached view :)))) no need to set description");
+            return;
+        }
         definitionView.setText(term.getDescription());
     }
 }

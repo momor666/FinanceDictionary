@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.nakhmedov.finance.R;
-import com.nakhmedov.finance.ui.entity.Term;
+import com.nakhmedov.finance.db.entity.Term;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

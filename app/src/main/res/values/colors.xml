@@ -14,5 +14,8 @@
     <color name="white">#ffffff</color>
     <color name="gray">#cccccc</color>
     <color name="red">#e61e43</color>
+    <color name="black_transparent">#A6000000</color>
+    <color name="light_green">#e6ebcc</color>
+    <color name="dollar_gray">#9b9d8c</color>
 
 </resources>

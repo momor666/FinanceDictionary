@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.nakhmedov.finance.R;
-import com.nakhmedov.finance.ui.entity.Category;
+import com.nakhmedov.finance.db.entity.Category;
 import com.nakhmedov.finance.ui.listener.OnItemClickListener;
 
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         holder.categoryText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onItemClick(holder.getAdapterPosition());
+                onItemClick(categoryList.get(holder.getAdapterPosition()));
             }
         });
     }
@@ -63,8 +63,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     }
 
     @Override
-    public void onItemClick(int position) {
-        mListener.onItemClick(position);
+    public void onItemClick(Category category) {
+        mListener.onItemClick(category);
     }
 
     public void setData(List<Category> categoryList) {

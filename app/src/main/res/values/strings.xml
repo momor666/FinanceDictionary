@@ -34,6 +34,7 @@
     <string name="dont_check">Don\'t check for updates</string>
     <string name="update">Update</string>
     <string name="action_cancel">Cancel</string>
+
     <string name="empty">Empty</string>
     <string name="like">Like</string>
     <string name="category_sharing_txt">%1$s is my favourite category</string>
@@ -43,5 +44,31 @@
     <string name="add_favourite">Added to favourites</string>
     <string name="app_url">Go Finance https://play.google.com/store/apps/details?id=com.nakhmedov.finance</string>
     <string name="no_content_play">No content to play, please try to check internet connection</string>
+    <string name="search_empty">Check the request is correct or specify a new one.</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="cant_get_content">Could not get the content, please try to check internet.</string>
+    <string name="ok">OK</string>
+    <string name="converter">Converter</string>
+    <string name="currencey_converter">Currency converter</string>
+    <string name="amount">Amount</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="new_feature">New feature</string>
+    <string name="we_are_working_hard">We are working on that soon it will be available on next version.</string>
+    <string name="sum">Sum = </string>
+    <string name="need_enter_value">You need to enter value</string>
+    <string name="check_net">Please check your internet connection.</string>
+    <string name="category_update_failed">Category update is failed. Please check your internet.</string>
+    <string name="term_update_failed">Terms update is failed. Please check your internet.</string>
+    <string name="updating_terms">Updating new terms...</string>
+    <string name="retry">RETRY</string>
+    <string name="updating_categories">Updating categories</string>
+    <string name="empty_starred">Your favourite terms is empty</string>
+    <string name="need_faovourite_category">You can quiz yourself if you have favourite categories.</string>
+    <string name="finish_test">You completed test.</string>
+    <string name="version">Go Finance  1.0 version</string>
+    <string name="about">About</string>
+    <string name="about_description">Go Finance app is handy for whom want to study Finance....</string>
+    <string name="day_term">Day Term</string>
 
 </resources>

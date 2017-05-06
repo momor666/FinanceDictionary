@@ -9,8 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.PrefLab;
 
@@ -30,6 +32,8 @@ public class BaseActivity extends AppCompatActivity {
     @Nullable @BindView(R.id.adView) AdView mAdView;
     @Nullable @BindView(R.id.toolbar) Toolbar mToolbar;
 
+    private InterstitialAd mInterstitialAd;
+
     public SharedPreferences prefs;
 
     @Override
@@ -45,6 +49,7 @@ public class BaseActivity extends AppCompatActivity {
         if(needToolbar()) initToolbar();
 
         loadAds();
+        loadInsertialAds();
     }
 
     public boolean needToolbar() {
@@ -99,14 +104,59 @@ public class BaseActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
     }
 
-    private void loadAds() {
+    protected void loadAds() {
         boolean isBannerAdsEnabled = prefs.getBoolean(PrefLab.BANNER_ADS_KEY, false);
-        if (isBannerAdsEnabled && mAdView != null) {
-            mAdView.setVisibility(View.VISIBLE);
+        if (mAdView != null) {
+            if (isBannerAdsEnabled) {
+                mAdView.setVisibility(View.VISIBLE);
+                AdRequest adRequest = new AdRequest.Builder()
+                        .addTestDevice("9955D816375FF5AF7DDE1FAA0B2B0413")
+                        .build();
+                mAdView.loadAd(adRequest);
+            }
+            else {
+                mAdView.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void loadInsertialAds() {
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getResources().getString(R.string.insertial_ad_unit_id));
+
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                requestNewInterstitial();
+            }
+
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+                displayInsertialAds();
+            }
+        });
+
+    }
+
+    public void requestNewInterstitial() {
+        // Request a new ad if one isn't already loaded, hide the button, and kick off the timer.
+        boolean isInsertialAdsEnabled = prefs.getBoolean(PrefLab.INSERTIAL_ADS_KEY, false);
+        if (isInsertialAdsEnabled && !mInterstitialAd.isLoading()
+                && !mInterstitialAd.isLoaded() && mInterstitialAd.getAdUnitId() != null) {
             AdRequest adRequest = new AdRequest.Builder()
                     .addTestDevice("9955D816375FF5AF7DDE1FAA0B2B0413")
                     .build();
-            mAdView.loadAd(adRequest);
+            mInterstitialAd.loadAd(adRequest);
+        }
+    }
+
+    private void displayInsertialAds() {
+        boolean isFirstTime = prefs.getBoolean(PrefLab.DISPLAY_INSERTIAL, true);
+
+        if (mInterstitialAd.isLoaded() && isFirstTime) {
+            mInterstitialAd.show();
+            prefs.edit().putBoolean(PrefLab.DISPLAY_INSERTIAL, false).apply();
         }
     }
 
@@ -118,5 +168,4 @@ public class BaseActivity extends AppCompatActivity {
         shareIntent.setType("text/plain");
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share)));
     }
-
 }

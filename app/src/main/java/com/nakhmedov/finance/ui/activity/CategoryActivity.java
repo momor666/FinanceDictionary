@@ -3,7 +3,6 @@ package com.nakhmedov.finance.ui.activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.MenuItem;
 import android.view.View;
@@ -71,7 +70,7 @@ public class CategoryActivity extends BaseActivity {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         CategoryFragment categoryFragment = CategoryFragment.newInstance();
         StarredFragment starredFragment = StarredFragment.newInstance();
-        QuizFragment quizFragment = QuizFragment.newInstance();
+        final QuizFragment quizFragment = QuizFragment.newInstance();
         adapter.addFragment(categoryFragment);
         adapter.addFragment(starredFragment);
         adapter.addFragment(quizFragment);
@@ -101,5 +100,9 @@ public class CategoryActivity extends BaseActivity {
 
     private void selectNavigationMenuItem(int position) {
         navigation.getMenu().getItem(position).setChecked(true);
+    }
+
+    public void showCategoryPage() {
+        viewPager.setCurrentItem(0);
     }
 }

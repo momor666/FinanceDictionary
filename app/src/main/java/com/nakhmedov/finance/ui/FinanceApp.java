@@ -4,8 +4,8 @@ import android.app.Application;
 import android.content.Context;
 
 import com.nakhmedov.finance.db.DbUpgradeHelper;
-import com.nakhmedov.finance.ui.entity.DaoMaster;
-import com.nakhmedov.finance.ui.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.DaoMaster;
+import com.nakhmedov.finance.db.entity.DaoSession;
 
 import org.greenrobot.greendao.database.Database;
 

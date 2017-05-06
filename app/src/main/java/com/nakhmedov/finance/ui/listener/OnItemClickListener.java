@@ -1,5 +1,7 @@
 package com.nakhmedov.finance.ui.listener;
 
+import com.nakhmedov.finance.db.entity.Category;
+
 /**
  * Created with Android Studio
  * User: navruz
@@ -9,5 +11,5 @@ package com.nakhmedov.finance.ui.listener;
  */
 
 public interface OnItemClickListener<T> {
-    void onItemClick(int position);
+    void onItemClick(Category selectedCategory);
 }

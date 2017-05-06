@@ -2,14 +2,10 @@ package com.nakhmedov.finance.ui.activity;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.ui.fragment.SettingsFragment;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created with Android Studio
@@ -38,5 +34,16 @@ public class SettingsActivity extends BaseActivity {
                     .replace(R.id.content, settingsFragment)
                     .commit();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home: {
+                finish();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

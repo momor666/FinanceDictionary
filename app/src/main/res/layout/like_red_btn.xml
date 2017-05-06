@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     app:icon_type="Star"
     app:circle_start_color="@color/colorPrimary"
-    app:like_drawable="@drawable/ic_heart_like_red"
+    app:like_drawable="@drawable/ic_heart_like_green"
     app:unlike_drawable="@drawable/ic_heart_unlike_white"
     app:dots_primary_color="@color/red"
     app:dots_secondary_color="@color/red"

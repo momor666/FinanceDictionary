@@ -1,4 +1,4 @@
-package com.nakhmedov.finance.ui.entity;
+package com.nakhmedov.finance.db.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -23,12 +23,15 @@ public class Category {
     private String name;
 
     private boolean starred;
+    private long lastTermsUpdateTime;
 
-    @Generated(hash = 1949678304)
-    public Category(Long id, @NotNull String name, boolean starred) {
+    @Generated(hash = 204665961)
+    public Category(Long id, @NotNull String name, boolean starred,
+            long lastTermsUpdateTime) {
         this.id = id;
         this.name = name;
         this.starred = starred;
+        this.lastTermsUpdateTime = lastTermsUpdateTime;
     }
 
     @Generated(hash = 1150634039)
@@ -61,5 +64,13 @@ public class Category {
 
     public void setStarred(boolean starred) {
         this.starred = starred;
+    }
+
+    public long getLastTermsUpdateTime() {
+        return lastTermsUpdateTime;
+    }
+
+    public void setLastTermsUpdateTime(long lastTermsUpdateTime) {
+        this.lastTermsUpdateTime = lastTermsUpdateTime;
     }
 }

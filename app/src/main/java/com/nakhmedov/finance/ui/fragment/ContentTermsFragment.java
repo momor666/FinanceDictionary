@@ -7,24 +7,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.nakhmedov.finance.R;
+import com.nakhmedov.finance.db.entity.DaoSession;
+import com.nakhmedov.finance.db.entity.Term;
+import com.nakhmedov.finance.db.entity.TermDao;
 import com.nakhmedov.finance.ui.FinanceApp;
-import com.nakhmedov.finance.ui.entity.Category;
-import com.nakhmedov.finance.ui.entity.DaoSession;
-import com.nakhmedov.finance.ui.entity.Term;
-import com.nakhmedov.finance.ui.entity.TermDao;
+import com.nakhmedov.finance.ui.activity.BaseActivity;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 /**
  * Created with Android Studio
@@ -34,21 +30,20 @@ import butterknife.Unbinder;
  * To change this template use File | Settings | File Templates
  */
 
-public class ContentTermsFragment extends Fragment {
+public class ContentTermsFragment extends BaseFragment {
 
     public static final String TAG_FRAG = "ContentTermsFragment";
-    //    @BindView(R.id.toolbar) Toolbar mToolbar;
     public @BindView(R.id.term_viewpager) ViewPager mViewPager;
 
     private static final String KEY_TERM_ID = "selected_term_id";
     private static final String KEY_CATEGORY_ID = "selected_category_id";
 
     private int currentPosition = -1;
-    private Unbinder unbinder;
     private DaoSession daoSession;
 
     OnTermsPositionChangeListener mCallBack;
-    private Map<Integer, ViewTermContent> mPageReferenceMap = new HashMap<>(10);
+    private SparseArray<ViewTermContent> mPageReferenceMap = new SparseArray<>(10);
+    private int previousPosition = 0;
 
     public static Fragment newInstance(Long termId, Long categoryId) {
         ContentTermsFragment termsFragment = new ContentTermsFragment();
@@ -65,6 +60,11 @@ public class ContentTermsFragment extends Fragment {
     }
 
     @Override
+    public int getLayoutId() {
+        return R.layout.fragment_term_content;
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
@@ -72,22 +72,8 @@ public class ContentTermsFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-//        setRetainInstance(true);
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return LayoutInflater.from(getContext()).inflate(R.layout.fragment_term_content, container, false);
-    }
-
-    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        unbinder = ButterKnife.bind(this, view);
 
         daoSession = FinanceApp.getApplication(getContext())
                 .getDaoSession();
@@ -96,12 +82,6 @@ public class ContentTermsFragment extends Fragment {
         if (bundle != null) {
             long termId = bundle.getLong(KEY_TERM_ID);
             long categoryId = bundle.getLong(KEY_CATEGORY_ID);
-            Category selectedCategory = daoSession
-                    .getCategoryDao()
-                    .load(categoryId);
-
-//            ((SelectedTermActivity) getActivity()).setToolbarTitle(selectedCategory.getName());
-
             updateOrRenderUi(termId, categoryId);
         }
     }
@@ -126,8 +106,9 @@ public class ContentTermsFragment extends Fragment {
         mViewPager.setAdapter(customAdapter);
 
         mViewPager.setCurrentItem(currentPosition);
+        previousPosition = currentPosition;
         //improvements to load terms early
-        mViewPager.setOffscreenPageLimit(3);
+        mViewPager.setOffscreenPageLimit(5);
 
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -137,7 +118,9 @@ public class ContentTermsFragment extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
-                mCallBack.onTermPositionChanged(position);
+                mCallBack.onTermPositionChanged(previousPosition);
+                previousPosition = position;
+                ((BaseActivity) getActivity()).requestNewInterstitial();
             }
 
             @Override
@@ -157,11 +140,12 @@ public class ContentTermsFragment extends Fragment {
 
         @Override
         public Fragment getItem(int position) {
-            ViewTermContent viewTermGrag = ViewTermContent
-                    .newInstance(termList.get(position).getId());
-            mPageReferenceMap.put(position, viewTermGrag);
+            Term term = termList.get(position);
+            ViewTermContent viewTermFrag = ViewTermContent
+                    .newInstance(term.getId(), term.getCategoryId());
+            mPageReferenceMap.put(position, viewTermFrag);
 
-            return viewTermGrag;
+            return viewTermFrag;
 
         }
 
@@ -172,18 +156,12 @@ public class ContentTermsFragment extends Fragment {
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
-            super.destroyItem(container, position, object);
             mPageReferenceMap.remove(position);
+            super.destroyItem(container, position, object);
         }
 
         public ViewTermContent getFragment(int key) {
             return mPageReferenceMap.get(key);
         }
     };
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unbinder.unbind();
-    }
 }

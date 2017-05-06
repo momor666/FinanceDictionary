@@ -2,9 +2,9 @@ package com.nakhmedov.finance.db;
 
 import android.content.Context;
 
+import com.nakhmedov.finance.db.entity.DaoMaster;
 import com.nakhmedov.finance.db.migration.Migration;
 import com.nakhmedov.finance.db.migration.MigrationV1;
-import com.nakhmedov.finance.ui.entity.DaoMaster;
 
 import org.greenrobot.greendao.database.Database;
 

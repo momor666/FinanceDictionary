@@ -1,4 +1,4 @@
-package com.nakhmedov.finance.ui.entity;
+package com.nakhmedov.finance.db.entity;
 
 import com.nakhmedov.finance.constants.ContextConstants;
 

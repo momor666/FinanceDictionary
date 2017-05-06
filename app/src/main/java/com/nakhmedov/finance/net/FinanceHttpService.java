@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
@@ -32,5 +31,8 @@ public interface FinanceHttpService {
 
     @GET("definition/search")
     Call<JsonArray> doSearch(@Query("name") String term);
+
+    @GET("currency")
+    Call<JsonObject> getConvertRate(@Query("from") String firstCurrency, @Query("to") String secondCurrency);
 
 }

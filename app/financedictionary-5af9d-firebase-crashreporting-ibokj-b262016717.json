@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "financedictionary-5af9d",
+  "private_key_id": "b26201671799d59fa5d894aee00861da1e12020e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD2x7r4e9ZVP7YA\netFfRJr8p/NQrFlr/21cGxzvrSDK1afaIzg5Q9eg6UgPOar9qMY1ucTYEWSpMCHs\nrayz0RyMO1kinZZqXOD9YS17/dLt4QsXF+q2DV5avJ1scRDT4MYzl3VEoAyqM/PL\nvS44nZjHYoGHhNOyomLW3L0H43pnwt7Z54V0ZDcU54Pp9aIz+0JBlo166r9JMxHp\nkjXdPnWZ2Jhl8X4BIPNDGQ8fbDiP0dKXGL5iVrpc5ddVmkN/tJYC7tlT5Iy9IFMA\nmPjFwdotoy0Fs9EH8mAj42D9ZrWMuyBt5C+NJu2BM4dvTwkXL7+KM4dAgkagMuHF\nJhPxhC9xAgMBAAECggEASwzlDMrEnTp6BF1VrW504B/HvKIds92Dib5pJ270iRs/\nJ/UMFUZPno0zsAWuveQFG7O6bKelgFq2Bn+vBSS0VOV7ry5T31cNyaEzLwE7k8Kc\nF9LbO7CHIHs6OQ+NuZIjVO9b55nxIBYar7yCAQ/UtdZ8ZBV+OFZwTr3k8zA4OrON\nIZ+TvPm4B5CXeGi+LdGH5PfYpNjA9hlAsrr5I6Pe1enYJLMPwEWCF48fb/avRWjl\nySDwEyxR4BEPrz6kGC/9JbQD9bzCVoi0tzxgmOt3bev3qMRI2ezO5B28gN24/qE/\nVWhT9BxvoZC8/jVUpkvcd6d3cxsbmgBdWzVhGLPgvQKBgQD/jywAHYlv4IxYdIu3\nMZUtOnArpf1BGofCoFOkq2RAtUDfNO7zvaxgvmAwufnzbUg1RWnKpZsbfwEeQ85y\nXHgxIaNrsYE+cqMEfLkT5Yrks72tU4Qt/UmBE4+d6wTUlSCMUbwJiZD+XCxPjaJ3\nRUJqlohEpZQvXR2Hmsh78ZXoewKBgQD3NK68cnbI/HmzQvVjCEJuFYAXgXKJaP4R\nd3Zj5dbwI94seZp081RG7cXklgw0xSGtA7WJ4sXONLjJJYvpgWjK5L9nZSmlkHb4\no4jc9b2tq+TwZTyM4ev/gm2SNE0fyMHr0L1Hd8HqmQU7q9oufKWp4nim+eTLm44z\nIxlfqdyCAwKBgQDbxRzasIvriRhITVmFXf9imLmz35gN76nGRqgHmViqiPTTvqqr\nM3bU74K7BIQdweHx5dKXcZkUqUCl7TvRfxHhdoMZ7tktgdoM1tE2ehTannPEZWjr\nP8GBXfgInv5VbjVCVlu1e/cTtuJoO2320bnO/csL9bSckp/9aK92XwhClwKBgHCR\nYdxYNzUQmw6BOCKPeUiNq9WIUbK2x7MGdjfJSpXxj1MrUKVexIrD7XBIz2gcOFiD\nruAKDs72fQrDeTGshx6VCX+4tj05SqOwPDt5/5SdCNRbFTaGDiQ8rU59WH1Xus56\nMCbiJsCAS7y/ZcvzYLC6evx2ILSCsj8hBYXlYI8nAoGARmt2w36cFnIMe6vcaWWn\nRHlpIZY4bPhit44ojO9ScPSbSTrBf1YXqNwfPKrx1ZC7Gn04n081huiwfGMm616J\nU010VHphxeuJzhLPO8wmWec6BXZhT8XXDvIEBUotq4dz7xKsc22ouJiIz7AtVn03\n9oLOPOS22BAADWPXkzAbYGg=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-crashreporting-ibokj@financedictionary-5af9d.iam.gserviceaccount.com",
+  "client_id": "110161893210243887438",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-crashreporting-ibokj%40financedictionary-5af9d.iam.gserviceaccount.com"
+}

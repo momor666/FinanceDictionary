@@ -1,45 +1,40 @@
 package com.nakhmedov.finance.ui.fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.nakhmedov.finance.R;
-import com.nakhmedov.finance.constants.ContextConstants;
-import com.nakhmedov.finance.net.FinanceHttpService;
+import com.nakhmedov.finance.constants.ActionNames;
+import com.nakhmedov.finance.constants.ExtrasNames;
+import com.nakhmedov.finance.constants.PrefLab;
+import com.nakhmedov.finance.db.entity.Category;
+import com.nakhmedov.finance.db.entity.CategoryDao;
+import com.nakhmedov.finance.db.entity.DaoSession;
 import com.nakhmedov.finance.ui.FinanceApp;
+import com.nakhmedov.finance.ui.activity.BaseActivity;
 import com.nakhmedov.finance.ui.activity.SelectedCategoryActivity;
 import com.nakhmedov.finance.ui.adapter.CategoryAdapter;
 import com.nakhmedov.finance.ui.components.EmptyRecyclerView;
-import com.nakhmedov.finance.ui.entity.Category;
-import com.nakhmedov.finance.ui.entity.CategoryDao;
-import com.nakhmedov.finance.ui.entity.DaoSession;
 import com.nakhmedov.finance.ui.listener.OnItemClickListener;
+import com.nakhmedov.finance.ui.service.CategoryUpdateService;
+import com.nakhmedov.finance.util.AndroidUtil;
 
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created with Android Studio
@@ -49,20 +44,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * To change this template use File | Settings | File Templates
  */
 
-public class CategoryListFragment extends Fragment {
+public class CategoryListFragment extends BaseFragment {
+    private String TAG = CategoryListFragment.class.getCanonicalName();
+
+    @BindView(R.id.recyclerview) EmptyRecyclerView recyclerView;
+    @BindView(R.id.empty_view) FrameLayout emptyView;
 
     private static final String KEY_POSITION = "position";
     public static final int ALL = 0;
     public static final int STARRED = 1;
-    private String TAG = CategoryListFragment.class.getCanonicalName();
-
-    @BindView(R.id.recyclerview) EmptyRecyclerView recyclerView;
-    @BindView(R.id.progress_bar) ProgressBar progressBar;
-    @BindView(R.id.empty_view) FrameLayout emptyView;
-
-    private Unbinder unbinder;
     private CategoryAdapter mAdapter;
-    private List<Category> categoryList;
 
     public static Fragment newInstance(int position) {
         CategoryListFragment fragment = new CategoryListFragment();
@@ -74,16 +65,23 @@ public class CategoryListFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+    public int getLayoutId() {
+        return R.layout.fragment_category_list;
     }
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_category_list, container, false);
-        unbinder = ButterKnife.bind(this, view);
+    public void onResume() {
+        super.onResume();
+        int position = getArguments().getInt(KEY_POSITION, -1);
+
+        if (position == STARRED) {
+            getStarredData();
+        }
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -95,105 +93,91 @@ public class CategoryListFragment extends Fragment {
 
         int position = getArguments().getInt(KEY_POSITION, -1);
 
-        showLoading();
         if (position == ALL) {
-            getOrUpdateData();
-        } else {
-            getStarredData();
-        }
+            IntentFilter intentFilter = new IntentFilter(ActionNames.UPDATE_CATEGORY_LIST);
+            LocalBroadcastManager.getInstance(getContext()).registerReceiver(categoryReceiver, intentFilter);
 
-        return view;
+            getOrUpdateData(true);
+        }
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unbinder.unbind();
+    public void onDestroyView() {
+        super.onDestroyView();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(categoryReceiver);
     }
 
-    private void getOrUpdateData() {
+    private void getOrUpdateData(boolean withService) {
+        showLoading();
         final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
-        categoryList = daoSession
+        final List<Category> localCategoryList = daoSession
                 .getCategoryDao()
                 .loadAll();
 
-        if (categoryList.isEmpty()) {
-            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        updateUI(localCategoryList);
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(interceptor)
-                    .build();
+        long lastUpdateTime = ((BaseActivity) getActivity()).prefs.getLong(PrefLab.CATEGORY_LAST_UPDATE, 0);
+        int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
 
-            final Gson gson = new GsonBuilder()
-                    .setLenient()
-                    .create();
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(ContextConstants.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build();
-            FinanceHttpService httpService = retrofit.create(FinanceHttpService.class);
-            httpService.listCategory().enqueue(new Callback<JsonArray>() {
-                @Override
-                public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
-                    Log.i(TAG, "response = " + response.toString());
-                    JsonArray result = response.body();
-                    for (int i = 0; i < result.size(); i++) {
-                        Gson gsonObj = new Gson();
-                        Category category = gsonObj.fromJson(result.get(i), Category.class);
-                        daoSession
-                                .getCategoryDao()
-                                .insert(category);
-                        categoryList.add(category);
-
-                    }
-                    updateUI(categoryList);
-                }
-
-                @Override
-                public void onFailure(Call<JsonArray> call, Throwable throwable) {
-                    Log.e(TAG, "failed = " + throwable.getMessage());
-                    updateUI(categoryList);
-                    throwable.printStackTrace();
-                }
-            });
+        if (withService && (lastUpdateTime == 0 || AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+            showLoading();
+            getActivity().startService(new Intent(getContext(), CategoryUpdateService.class));
         } else {
-            updateUI(categoryList);
+            Log.w(TAG, "withService = " + withService + " lastUpdateTime = " + lastUpdateTime);
         }
     }
 
     private void getStarredData() {
+        showLoading();
         DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
-        categoryList = daoSession
+        List<Category> starredCategoryList = daoSession
                 .getCategoryDao()
                 .queryBuilder()
                 .where(CategoryDao.Properties.Starred.eq(true))
                 .build()
                 .list();
-        updateUI(categoryList);
+        updateUI(starredCategoryList);
     }
 
-    private void updateUI(List<Category> categoryList) {
-        mAdapter.setData(categoryList);
+    private void updateUI(List<Category> list) {
+        mAdapter.setData(list);
         hideLoading();
-    }
-
-    private void showLoading() {
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-    private void hideLoading() {
-        progressBar.setVisibility(View.INVISIBLE);
     }
 
     private OnItemClickListener listener = new OnItemClickListener() {
         @Override
-        public void onItemClick(int position) {
+        public void onItemClick(Category selectedCategory) {
             Intent intent = new Intent(getActivity(), SelectedCategoryActivity.class);
-            intent.putExtra(SelectedCategoryActivity.EXTRA_NAME, categoryList.get(position).getName());
-            intent.putExtra(SelectedCategoryActivity.EXTRA_CATEGORY_ID, categoryList.get(position).getId());
+            intent.putExtra(SelectedCategoryActivity.EXTRA_NAME, selectedCategory.getName());
+            intent.putExtra(SelectedCategoryActivity.EXTRA_CATEGORY_ID, selectedCategory.getId());
             startActivity(intent);
         }
     };
+
+    private BroadcastReceiver categoryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "onReceive");
+            if (intent.getAction().equals(ActionNames.UPDATE_CATEGORY_LIST)) {
+                hideLoading();
+                if (intent.getExtras().getBoolean(ExtrasNames.CATEGORY_UPDATE_RESULT)) {
+                    getOrUpdateData(false);
+                } else {
+                    Snackbar.make(recyclerView, getString(R.string.category_update_failed), Snackbar.LENGTH_LONG)
+                            .setAction(getString(R.string.retry), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    getOrUpdateData(true);
+                                }
+                            })
+                            .show();
+                }
+            }
+        }
+    };
+
+    private void showMessage(String text) {
+        Snackbar.make(recyclerView, text, Snackbar.LENGTH_SHORT).show();
+    }
+
 }

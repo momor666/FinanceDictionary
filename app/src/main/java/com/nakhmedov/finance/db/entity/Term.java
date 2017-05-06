@@ -1,4 +1,4 @@
-package com.nakhmedov.finance.ui.entity;
+package com.nakhmedov.finance.db.entity;
 
 import android.support.annotation.Nullable;
 
@@ -9,7 +9,6 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.NotNull;
-import org.greenrobot.greendao.annotation.Transient;
 
 import me.yokeyword.indexablerv.IndexableEntity;
 
