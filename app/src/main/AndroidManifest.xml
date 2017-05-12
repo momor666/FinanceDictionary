@@ -79,14 +79,16 @@
         <service android:name=".ui.service.TermUpdateService"/>
 
         <service
-            android:name=".ui.service.FirebaseMessagingService">
+            android:exported="false"
+            android:name=".ui.fcm.FirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
         <service
-            android:name=".ui.service.FirebaseInstanceIDService">
+            android:exported="false"
+            android:name=".ui.fcm.FirebaseInstanceIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>

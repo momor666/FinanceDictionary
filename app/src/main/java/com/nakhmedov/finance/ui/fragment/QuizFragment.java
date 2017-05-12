@@ -171,7 +171,7 @@ public class QuizFragment extends BaseFragment implements MediaPlayer.OnPrepared
             for (int i = 0; i < 5; i++) {
                 questionTermList.add(termList.get(i));
             }
-            for (int i = 5; i < 20; i++) {
+            for (int i = 5; i < termList.size(); i++) {
                 distractorList.add(termList.get(i).getName());
             }
         }
@@ -358,19 +358,21 @@ public class QuizFragment extends BaseFragment implements MediaPlayer.OnPrepared
     }
 
     private void doQuizList() {
-        quizList = new ArrayList<>(questionTermList.size());
-        for (Term questionTerm : questionTermList) {
-            Quiz quiz = new Quiz(questionTerm.getDescription(), questionTerm.getName());
-            quizList.add(quiz);
-        }
-
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                displayNextQuestion();
-                hideLoading();
+        if (isAdded()) {
+            quizList = new ArrayList<>(questionTermList.size());
+            for (Term questionTerm : questionTermList) {
+                Quiz quiz = new Quiz(questionTerm.getDescription(), questionTerm.getName());
+                quizList.add(quiz);
             }
-        });
+
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    displayNextQuestion();
+                    hideLoading();
+                }
+            });
+        }
     }
 
     private void showDialog(String msgText, boolean needBarChart) {

@@ -1,4 +1,4 @@
-package com.nakhmedov.finance.ui.service;
+package com.nakhmedov.finance.ui.fcm;
 
 import android.util.Log;
 

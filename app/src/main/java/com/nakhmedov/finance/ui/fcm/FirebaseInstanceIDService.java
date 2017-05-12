@@ -1,9 +1,5 @@
-package com.nakhmedov.finance.ui.service;
+package com.nakhmedov.finance.ui.fcm;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;

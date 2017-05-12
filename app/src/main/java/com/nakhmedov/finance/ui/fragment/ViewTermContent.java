@@ -322,7 +322,9 @@ public class ViewTermContent extends BaseFragment {
     }
 
     private void showMessage(int msgText) {
-        Snackbar.make(getActivity().findViewById(R.id.content_frame), msgText, Snackbar.LENGTH_SHORT).show();
+        if (isAdded()) {
+            Snackbar.make(getActivity().findViewById(R.id.content_frame), msgText, Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     private void setPlayToggleIcon(int icon) {

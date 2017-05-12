@@ -112,7 +112,10 @@ public class CategoryListFragment extends BaseFragment {
         final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
         final List<Category> localCategoryList = daoSession
                 .getCategoryDao()
-                .loadAll();
+                .queryBuilder()
+                .orderAsc(CategoryDao.Properties.Name)
+                .build()
+                .list();
 
         updateUI(localCategoryList);
 
