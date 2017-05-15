@@ -3,6 +3,7 @@ package com.nakhmedov.finance.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,6 +27,7 @@ import com.nakhmedov.finance.db.entity.TermDao;
 import com.nakhmedov.finance.net.FinanceHttpService;
 import com.nakhmedov.finance.ui.FinanceApp;
 import com.nakhmedov.finance.ui.adapter.SearchAdapter;
+import com.nakhmedov.finance.util.NetworkUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,6 +210,11 @@ public class SearchActivity extends BaseActivity {
     }
 
     private void doRemoteSearch(String termName) {
+        if (!NetworkUtil.isNetActive(SearchActivity.this)) {
+            hideDialog();
+            showMessage(getString(R.string.no_internet));
+            return;
+        }
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient client = new OkHttpClient.Builder()
@@ -242,6 +249,10 @@ public class SearchActivity extends BaseActivity {
             }
         });
 
+    }
+
+    private void showMessage(String msgText) {
+        Snackbar.make(mRecyclerView, msgText, Snackbar.LENGTH_SHORT).show();
     }
 
     private void doProcess(final Response<JsonArray> response) {

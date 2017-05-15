@@ -11,7 +11,7 @@
     <item
         android:id="@+id/navigation_starred"
         android:icon="@drawable/ic_heart_like_white"
-        android:title="@string/starred"
+        android:title="@string/favourites"
         app:showAsAction="ifRoom"/>
 
     <item

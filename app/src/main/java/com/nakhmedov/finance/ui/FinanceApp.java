@@ -2,6 +2,7 @@ package com.nakhmedov.finance.ui;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.v7.app.AppCompatDelegate;
 
 import com.nakhmedov.finance.db.DbUpgradeHelper;
 import com.nakhmedov.finance.db.entity.DaoMaster;
@@ -21,6 +22,10 @@ public class FinanceApp extends Application {
 
     private static Context appContext;
     private DaoSession daoSession;
+
+    static {
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+    }
 
     @Override
     public void onCreate() {

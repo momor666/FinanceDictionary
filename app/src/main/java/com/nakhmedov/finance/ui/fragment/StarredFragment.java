@@ -67,7 +67,7 @@ public class StarredFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         ((CategoryActivity) getActivity()).setSupportActionBar(mToolbar);
-        ((CategoryActivity) getActivity()).setToolbarTitle(getString(R.string.starred));
+        ((CategoryActivity) getActivity()).setToolbarTitle(getString(R.string.favourites));
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(mLayoutManager);

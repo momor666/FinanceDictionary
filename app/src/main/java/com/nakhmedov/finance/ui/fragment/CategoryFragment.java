@@ -61,7 +61,7 @@ public class CategoryFragment extends BaseFragment {
 
         Adapter adapter = new Adapter(getChildFragmentManager());
         adapter.addFragment(CategoryListFragment.newInstance(CategoryListFragment.ALL), getString(R.string.all));
-        adapter.addFragment(CategoryListFragment.newInstance(CategoryListFragment.STARRED), getString(R.string.starred));
+        adapter.addFragment(CategoryListFragment.newInstance(CategoryListFragment.STARRED), getString(R.string.favourites));
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
 

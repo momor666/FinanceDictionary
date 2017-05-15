@@ -110,7 +110,6 @@ public class BaseActivity extends AppCompatActivity {
             if (isBannerAdsEnabled) {
                 mAdView.setVisibility(View.VISIBLE);
                 AdRequest adRequest = new AdRequest.Builder()
-                        .addTestDevice("9955D816375FF5AF7DDE1FAA0B2B0413")
                         .build();
                 mAdView.loadAd(adRequest);
             }

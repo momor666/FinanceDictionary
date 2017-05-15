@@ -31,7 +31,7 @@ public class MainMenuAdapter extends BaseAdapter {
 
     private final Context mContext;
 //    private String menus[] = {categories, quiz, stockWatch, loanCalc, stockWatch, loanCalc};
-    private String menus[] = {"Categories", "Quiz", "Loan Calculator", "Converter", "Starred", "About"};
+    private String menus[] = {"Categories", "Quiz", "Loan Calculator", "Converter", "Favourites", "About"};
     private int images[] = {R.drawable.ic_category_gray, R.drawable.ic_quiz_gray, R.drawable.ic_maths_symbols,
             R.drawable.ic_dollar_gray, R.drawable.ic_heart_like_gray, R.drawable.ic_about_us};
 
