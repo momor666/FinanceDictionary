@@ -11,6 +11,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.firebase.appindexing.Action;
+import com.google.firebase.appindexing.FirebaseAppIndex;
+import com.google.firebase.appindexing.FirebaseUserActions;
+import com.google.firebase.appindexing.Indexable;
+import com.google.firebase.appindexing.builders.Indexables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -47,6 +52,7 @@ public class TermUpdateService extends Service {
 
     private static final String TAG = TermUpdateService.class.getCanonicalName();
     public static final String EXTRA_CATEGORY_ID = "category_id";
+    private static final String TERM_URL = "http://gofinancedictionary.google.com/terms/";
     private DaoSession daoSession;
     private NotificationManager notificationManager;
     private ExecutorService executorService;
@@ -152,7 +158,6 @@ public class TermUpdateService extends Service {
                         .insert(term);
             } else {
                 localTerm.setName(term.getName());
-                localTerm.setDescription(null);
                 daoSession
                         .getTermDao()
                         .update(localTerm);
@@ -164,6 +169,12 @@ public class TermUpdateService extends Service {
                     .setProgress(100, i*100/count, false);
             // Displays the progress bar for the first time.
             notificationManager.notify(ContextConstants.NTFY_TERM_ID, mBuilder.build());
+
+            // write this message to the on-device index
+            FirebaseAppIndex.getInstance().update(getMessageIndexable(term));
+            // log a view action on it
+            FirebaseUserActions.getInstance().end(getMessageViewAction(term));
+
         }
         Log.i(TAG, "doProcess term updated");
         Category category = daoSession
@@ -178,6 +189,21 @@ public class TermUpdateService extends Service {
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         stopSelf();
     }
+
+    private Indexable getMessageIndexable(Term term) {
+        return Indexables.messageBuilder()
+                .setName(term.getName())
+                .setUrl(TERM_URL.concat(term.getId()+""))
+                .build();
+    }
+
+    private Action getMessageViewAction(Term term) {
+        return new Action.Builder(Action.Builder.VIEW_ACTION)
+                .setObject(term.getName(), TERM_URL.concat(term.getId()+""))
+                .setMetadata(new Action.Metadata.Builder().setUpload(false))
+                .build();
+    }
+
 
     @Override
     public void onDestroy() {
