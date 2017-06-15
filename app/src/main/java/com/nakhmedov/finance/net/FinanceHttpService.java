@@ -3,6 +3,7 @@ package com.nakhmedov.finance.net;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -32,7 +33,7 @@ public interface FinanceHttpService {
     @GET("definition/search")
     Call<JsonArray> doSearch(@Query("name") String term);
 
-    @GET("currency")
-    Call<JsonObject> getConvertRate(@Query("from") String firstCurrency, @Query("to") String secondCurrency);
+    @GET("converter")
+    Call<ResponseBody> getConvertRate(@Query("a") String amount, @Query("from") String firstCurrency, @Query("to") String secondCurrency);
 
 }

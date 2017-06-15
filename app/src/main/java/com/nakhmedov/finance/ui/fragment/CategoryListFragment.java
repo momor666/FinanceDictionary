@@ -108,25 +108,27 @@ public class CategoryListFragment extends BaseFragment {
     }
 
     private void getOrUpdateData(boolean withService) {
-        showLoading();
-        final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
-        final List<Category> localCategoryList = daoSession
-                .getCategoryDao()
-                .queryBuilder()
-                .orderAsc(CategoryDao.Properties.Name)
-                .build()
-                .list();
-
-        updateUI(localCategoryList);
-
-        long lastUpdateTime = ((BaseActivity) getActivity()).prefs.getLong(PrefLab.CATEGORY_LAST_UPDATE, 0);
-        int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
-
-        if (withService && (lastUpdateTime == 0 || AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+        if (isAdded()) { // Service is sent to Intent via Broadcast
             showLoading();
-            getActivity().startService(new Intent(getContext(), CategoryUpdateService.class));
-        } else {
-            Log.w(TAG, "withService = " + withService + " lastUpdateTime = " + lastUpdateTime);
+            final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
+            final List<Category> localCategoryList = daoSession
+                    .getCategoryDao()
+                    .queryBuilder()
+                    .orderAsc(CategoryDao.Properties.Name)
+                    .build()
+                    .list();
+
+            updateUI(localCategoryList);
+
+            long lastUpdateTime = ((BaseActivity) getActivity()).prefs.getLong(PrefLab.CATEGORY_LAST_UPDATE, 0);
+            int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
+
+            if (withService && (lastUpdateTime == 0 || AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+                showLoading();
+                getActivity().startService(new Intent(getContext(), CategoryUpdateService.class));
+            } else {
+                Log.w(TAG, "withService = " + withService + " lastUpdateTime = " + lastUpdateTime);
+            }
         }
     }
 

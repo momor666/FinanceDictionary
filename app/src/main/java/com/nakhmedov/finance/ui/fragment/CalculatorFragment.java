@@ -15,29 +15,28 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.nakhmedov.finance.R;
 import com.nakhmedov.finance.constants.ContextConstants;
 import com.nakhmedov.finance.db.entity.Country;
 import com.nakhmedov.finance.net.FinanceHttpService;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 /**
  * Created with Android Studio
@@ -166,29 +165,42 @@ public class CalculatorFragment extends BaseFragment {
 //        OkHttpClient client = new OkHttpClient.Builder()
 //                .addInterceptor(interceptor)
 //                .build();
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
+//        Gson gson = new GsonBuilder()
+//                .setLenient()
+//                .create();
         Retrofit retrofit = new Retrofit.Builder()
 //                .client(client)
-                .addConverterFactory(GsonConverterFactory.create(gson))
+                .addConverterFactory(ScalarsConverterFactory.create())
                 .baseUrl(ContextConstants.CONVERTER_URL)
                 .build();
 
         FinanceHttpService service = retrofit.create(FinanceHttpService.class);
-        service.getConvertRate(fromCurrency, toCurrency).enqueue(new Callback<JsonObject>() {
+        service.getConvertRate(amount, fromCurrency, toCurrency).enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
-                    JsonObject result = response.body();
-                    String rate = result.get("rate").getAsString();
-                    showResult(Double.parseDouble(rate), Double.parseDouble(amount), toCurrency);
+                    try {
+                        String responseBody = response.body().string();
+                        String regex = "<span class=bld>(.+?)</span>";
+                        final Pattern pattern = Pattern.compile(regex);
+                        Matcher matcher = pattern.matcher(responseBody);
+                        if (matcher.find()) {
+                            String resultString = matcher.group(1);
+                            showResult(resultString);
+                        } else {
+                            showMessage(getString(R.string.smth_wrong));
+                        }
+
+                    } catch (Exception e) {
+                        showMessage(getString(R.string.smth_wrong));
+                        e.printStackTrace();
+                    }
                 }
                 hideLoading();
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable throwable) {
+            public void onFailure(Call<ResponseBody> call, Throwable throwable) {
                 throwable.printStackTrace();
                 showMessage(getString(R.string.check_net));
                 hideLoading();
@@ -196,11 +208,11 @@ public class CalculatorFragment extends BaseFragment {
         });
     }
 
-    private void showResult(double rate, double amount, String toCurrency) {
-        DecimalFormat df = new DecimalFormat("#,###.##");
+    private void showResult(String result) {
+//        DecimalFormat df = new DecimalFormat("#,###.##");
 
-        String result = df.format(rate*amount);
-        sumView.setText(" " + result + " " + toCurrency);
+//        String result = df.format(rate*amount);
+        sumView.setText(" " + result);
         showResultView();
     }
 

@@ -107,10 +107,10 @@ public class CategoryUpdateService extends Service {
                     @Override
                     public void onFailure(Call<JsonArray> call, Throwable throwable) {
                         Log.e(TAG, "failed = " + throwable.getMessage());
+                        throwable.printStackTrace();
                         Intent intent = new Intent(ActionNames.UPDATE_CATEGORY_LIST);
                         intent.putExtra(ExtrasNames.CATEGORY_UPDATE_RESULT, false);
                         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-                        throwable.printStackTrace();
                         stopSelf();
                     }
                 });

@@ -14,7 +14,7 @@ public class ContextConstants {
 
     public static final String PACKAGE_NAME = FinanceApp.getAppContext().getPackageName();
     public static final String BASE_URL = "http://52.25.65.23/api/";
-    public static final String CONVERTER_URL = "http://rate-exchange-1.appspot.com/";
+    public static final String CONVERTER_URL = "https://www.google.com/finance/";
 
     public static final int TERM_TYPE = 101;
     public static final int RECENT_TYPE = 102;

@@ -188,26 +188,28 @@ public class SelectedCategory extends BaseFragment {
     }
 
     private void loadTermsByCategoryId(long categoryId, boolean withService) {
-        showLoading();
-        final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
-        final List<Term> termList = daoSession
-                .getTermDao()
-                .queryBuilder()
-                .where(TermDao.Properties.CategoryId.eq(categoryId))
-                .build()
-                .list();
-        updateTermsListUI(termList);
-
-        Category category = daoSession.getCategoryDao().load(categoryId);
-        int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
-        long lastUpdateTime = category.getLastTermsUpdateTime();
-
-        if (withService && (lastUpdateTime == 0 ||
-                AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+        if (isAdded()) {
             showLoading();
-            Intent termServiceIntent = new Intent(getContext(), TermUpdateService.class);
-            termServiceIntent.putExtra(TermUpdateService.EXTRA_CATEGORY_ID, categoryId);
-            getActivity().startService(termServiceIntent);
+            final DaoSession daoSession = ((FinanceApp) getActivity().getApplicationContext()).getDaoSession();
+            final List<Term> termList = daoSession
+                    .getTermDao()
+                    .queryBuilder()
+                    .where(TermDao.Properties.CategoryId.eq(categoryId))
+                    .build()
+                    .list();
+            updateTermsListUI(termList);
+
+            Category category = daoSession.getCategoryDao().load(categoryId);
+            int updatePeriodInDay = ((BaseActivity) getActivity()).prefs.getInt(PrefLab.UPDATE_DATA_PERIOD, 7);
+            long lastUpdateTime = category.getLastTermsUpdateTime();
+
+            if (withService && (lastUpdateTime == 0 ||
+                    AndroidUtil.isMoreThanSelectedDays(new Date(lastUpdateTime), updatePeriodInDay))) {
+                showLoading();
+                Intent termServiceIntent = new Intent(getContext(), TermUpdateService.class);
+                termServiceIntent.putExtra(TermUpdateService.EXTRA_CATEGORY_ID, categoryId);
+                getActivity().startService(termServiceIntent);
+            }
         }
     }
 
