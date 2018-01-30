@@ -67,9 +67,6 @@ public class TermUpdateService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "onCreate");
-        if (executorService == null) {
-            executorService = Executors.newCachedThreadPool();
-        }
 
         daoSession = ((FinanceApp) getApplicationContext()).getDaoSession();
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -80,6 +77,11 @@ public class TermUpdateService extends Service {
         Log.i(TAG, "onStartCommand");
 
         if (intent != null) {
+
+            if (executorService == null) {
+                executorService = Executors.newCachedThreadPool();
+            }
+
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {

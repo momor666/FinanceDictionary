@@ -73,6 +73,8 @@ public class SelectedTermActivity extends BaseActivity implements ContentTermsFr
                 getSupportFragmentManager().findFragmentByTag(ContentTermsFragment.TAG_FRAG);
         ViewTermContent viewTermContent = ((ContentTermsFragment.CustomAdapter)
                 contentTermsFragment.mViewPager.getAdapter()).getFragment(position);
-        viewTermContent.pauseSpeech(false);
+        if (viewTermContent != null) {
+            viewTermContent.pauseSpeech(false);
+        }
     }
 }

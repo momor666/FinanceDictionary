@@ -230,7 +230,6 @@ public class ViewTermContent extends BaseFragment {
                     playDefinition();
                 } else {
                     pauseSpeech(false);
-                    item.setIcon(R.drawable.ic_play_arrow_white);
                 }
                 break;
             }
@@ -245,7 +244,7 @@ public class ViewTermContent extends BaseFragment {
     @Override
     public void onPause() {
         super.onPause();
-        pauseSpeech(true);
+        pauseSpeech(false);
     }
 
     @OnClick(R.id.fabtoolbar_fab)
@@ -291,6 +290,9 @@ public class ViewTermContent extends BaseFragment {
                 mTTS.shutdown();
             }
         }
+
+        setPlayToggleIcon(true);
+
     }
 
     private void playDefinition() {
@@ -300,7 +302,7 @@ public class ViewTermContent extends BaseFragment {
             return;
         }
 
-        setPlayToggleIcon(R.drawable.ic_pause_white);
+        setPlayToggleIcon(false);
 
         String uniqueId = UUID.randomUUID().toString();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -327,9 +329,11 @@ public class ViewTermContent extends BaseFragment {
         }
     }
 
-    private void setPlayToggleIcon(int icon) {
+    private void setPlayToggleIcon(boolean isPlay) {
+        int icon = (isPlay) ? R.drawable.ic_play_arrow_white : R.drawable.ic_pause_white;
         if (playItemView != null) {
             playItemView.setIcon(icon);
+            playItemView.setChecked(!isPlay);
         }
     }
 
